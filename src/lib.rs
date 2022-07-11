@@ -1,11 +1,14 @@
 use clap::{App, Arg};
 use std::error::Error;
 use docker_api::{Docker};
-use docker_api::api::{ImageBuildChunk, PullOpts};
-use docker_api::api::ImageBuildChunk::PullStatus;
-use futures_util::StreamExt;
+use docker_api::api::{ImageBuildChunk::PullStatus, ImageBuildChunk, PullOpts, ContainerCreateOpts};
+use std::path::PathBuf;
+use tar::Archive;
+use futures_util::{TryFutureExt, StreamExt, TryStreamExt};
 
 pub type DCPResult<T> = Result<T, Box<dyn Error>>;
+
+const SOCKET:&str = "unix:///var/run/docker.sock";
 
 #[derive(Debug)]
 pub struct Config {
@@ -72,26 +75,56 @@ pub fn get_args() -> DCPResult<Config> {
         write_to_stdout,
     })
 }
-
+/// Run runs a sequence of events with the provided image
+/// 1. Pull down the image
+/// 2. Create a container, receiving the container id as a response
+/// 3. Copy the container content to the specified directory
 pub async fn run(config: Config) -> DCPResult<()> {
     println!("{:#?}", config);
-    let docker = Docker::new("unix:///var/run/docker.sock")?;
-    let info = docker.info().await?;
-    println!("{:#?}", info);
+    let docker = Docker::new(SOCKET)?;
 
-    let opts = PullOpts::builder().image(config.image).build();
+    let pull_opts = PullOpts::builder().image(config.image.clone()).build();
     let images = docker.images();
-    let mut stream = images.pull(&opts);
+    let mut stream = images.pull(&pull_opts);
 
-    while let Some(pull_result) = stream.next().await {
-        match pull_result {
-            Ok(output) => {
-                println!("{:?}", output);
-            },
-            Err(e) => eprintln!("{}", e),
-        }
+    // TODO: close this stream somehow
+    // while let Some(pull_result) = stream.next().await {
+    //     match pull_result {
+    //         Ok(output) => {
+    //             println!("{:?}", output);
+    //         },
+    //         Err(e) => eprintln!("{}", e),
+    //     }
+    // }
+
+    let mut id: String = String::new();
+    let create_opts = ContainerCreateOpts::builder(config.image.clone()).build();
+    match docker.containers().create(&create_opts).await {
+        Ok(info) => {
+            println!("{:?}", info);
+            // id = info.docker.id
+        },
+        Err(e) => eprintln!("Error: {}", e),
     }
 
+    // TODO: get container from info
+    // TODO: why isn't the container visible via docker ps?
+
+    let mut content_path = PathBuf::new();
+    content_path.push(&config.content_path);
+
+    let mut download_path = PathBuf::new();
+    download_path.push(&config.download_path);
+
+    let bytes = docker
+        .containers()
+        .get(&id)
+        .copy_from(&content_path)
+        .try_concat()
+        .await?;
+
+    let mut archive = Archive::new(&bytes[..]);
+    archive.unpack(&download_path)?;
 
     Ok(())
 }

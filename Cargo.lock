@@ -136,6 +136,7 @@ dependencies = [
  "clap",
  "docker-api",
  "futures-util",
+ "tar",
  "tokio",
 ]
 
