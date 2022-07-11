@@ -1,6 +1,9 @@
 use clap::{App, Arg};
 use std::error::Error;
 use docker_api::{Docker};
+use docker_api::api::{ImageBuildChunk, PullOpts};
+use docker_api::api::ImageBuildChunk::PullStatus;
+use futures_util::StreamExt;
 
 pub type DCPResult<T> = Result<T, Box<dyn Error>>;
 
@@ -58,11 +61,8 @@ pub fn get_args() -> DCPResult<Config> {
     let write_to_stdout = matches.is_present("write_to_stdout");
 
     let mut img = String::new();
-    match image {
-        Some(mut i) => {
-            img = i.to_string()
-        }
-        None => (),
+    if let Some(i) = image {
+        img = i.to_string()
     }
 
     Ok(Config {
@@ -78,6 +78,20 @@ pub async fn run(config: Config) -> DCPResult<()> {
     let docker = Docker::new("unix:///var/run/docker.sock")?;
     let info = docker.info().await?;
     println!("{:#?}", info);
+
+    let opts = PullOpts::builder().image(config.image).build();
+    let images = docker.images();
+    let mut stream = images.pull(&opts);
+
+    while let Some(pull_result) = stream.next().await {
+        match pull_result {
+            Ok(output) => {
+                println!("{:?}", output);
+            },
+            Err(e) => eprintln!("{}", e),
+        }
+    }
+
 
     Ok(())
 }

@@ -8,4 +8,5 @@ edition = "2021"
 [dependencies]
 clap = "2.33"
 docker-api = "0.9.1"
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1.0", features = ["full"] }
+futures-util = "0.3"
