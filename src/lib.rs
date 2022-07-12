@@ -59,18 +59,13 @@ pub fn get_args() -> DCPResult<Config> {
                 .long("write_to_stdout")
         ).get_matches();
 
-    let image = matches.value_of("image");
+    let image = matches.value_of("image").unwrap().to_string();
     let download_path = matches.value_of("download_path").unwrap().to_string();
     let content_path = matches.value_of("content_path").unwrap().to_string();
     let write_to_stdout = matches.is_present("write_to_stdout");
 
-    let mut img = String::new();
-    if let Some(i) = image {
-        img = i.to_string()
-    }
-
     Ok(Config {
-        image: img,
+        image,
         download_path,
         content_path,
         write_to_stdout,
