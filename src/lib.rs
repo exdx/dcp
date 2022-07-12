@@ -3,12 +3,13 @@ use std::error::Error;
 use docker_api::{Docker};
 use docker_api::api::{ImageBuildChunk::PullStatus, ImageBuildChunk, PullOpts, ContainerCreateOpts};
 use std::path::PathBuf;
+use std::{thread, time};
 use tar::Archive;
 use futures_util::{TryFutureExt, StreamExt, TryStreamExt};
 
 pub type DCPResult<T> = Result<T, Box<dyn Error>>;
 
-const SOCKET:&str = "unix:///var/run/docker.sock";
+const DOCKER_SOCKET:&str = "unix:///var/run/docker.sock";
 
 #[derive(Debug)]
 pub struct Config {
@@ -80,8 +81,7 @@ pub fn get_args() -> DCPResult<Config> {
 /// 2. Create a container, receiving the container id as a response
 /// 3. Copy the container content to the specified directory
 pub async fn run(config: Config) -> DCPResult<()> {
-    println!("{:#?}", config);
-    let docker = Docker::new(SOCKET)?;
+    let docker = Docker::new(DOCKER_SOCKET)?;
 
     let pull_opts = PullOpts::builder().image(config.image.clone()).build();
     let images = docker.images();
@@ -97,18 +97,11 @@ pub async fn run(config: Config) -> DCPResult<()> {
     //     }
     // }
 
-    let mut id: String = String::new();
+    // let mut id: String = String::new();
     let create_opts = ContainerCreateOpts::builder(config.image.clone()).build();
-    match docker.containers().create(&create_opts).await {
-        Ok(info) => {
-            println!("{:?}", info);
-            // id = info.docker.id
-        },
-        Err(e) => eprintln!("Error: {}", e),
-    }
-
-    // TODO: get container from info
-    // TODO: why isn't the container visible via docker ps?
+    let container = docker.containers().create(&create_opts).await?;
+    let id = container.id();
+    println!("{:?}", id);
 
     let mut content_path = PathBuf::new();
     content_path.push(&config.content_path);
@@ -118,7 +111,7 @@ pub async fn run(config: Config) -> DCPResult<()> {
 
     let bytes = docker
         .containers()
-        .get(&id)
+        .get(&*id)
         .copy_from(&content_path)
         .try_concat()
         .await?;
