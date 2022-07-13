@@ -55,7 +55,7 @@ pub fn get_args() -> DCPResult<Config> {
         .arg(
             Arg::with_name("image")
                 .value_name("IMAGE")
-                .help("Container images to extract content from")
+                .help("Container image to extract content from")
                 .required(true)
         )
         .arg(
