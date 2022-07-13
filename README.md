@@ -34,9 +34,21 @@ this limits `dcp` to only working on systems where docker is the container runti
 
 ## Flags and Examples
 
-As an example, lets try
-`dcp tyslaton/sample-catalog:v0.0.4 -d output -p configs`
+By default, dcp will copy content to the current directory `.`. For example, lets
+try issuing the following command:
 
-This command pulls down the request image, only extracting
-the `configs` directory (via the `-p` flag) and copying it to the `output` directory
-locally (via the `-d` flag). 
+```
+$ dcp tyslaton/sample-catalog:v0.0.4 -p configs
+```
+
+This command will copy the `configs` directory (specified via the `-p` flag) from the image to the current directory.
+
+For further configuration, lets try:
+
+```
+$ dcp tyslaton/sample-catalog:v0.0.4 -d output -p configs
+```
+
+This command pulls down the requested image, only extracting
+the `configs` directory and copying it to the `output` directory
+locally (specified via the `-d` flag). 

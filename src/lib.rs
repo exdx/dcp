@@ -3,9 +3,11 @@ use std::error::Error;
 use docker_api::{Docker};
 use docker_api::api::{ImageBuildChunk::PullStatus, ImageBuildChunk, PullOpts, ContainerCreateOpts};
 use std::path::PathBuf;
-use std::{thread, time};
+use std::{io, thread, time};
+use std::io::{stdout, Write};
 use tar::Archive;
-use futures_util::{TryFutureExt, StreamExt, TryStreamExt};
+use futures_util::{TryFutureExt, StreamExt, TryStreamExt, AsyncWriteExt, AsyncBufReadExt};
+use tar::Unpacked::File;
 
 pub type DCPResult<T> = Result<T, Box<dyn Error>>;
 
@@ -114,7 +116,11 @@ pub async fn run(config: Config) -> DCPResult<()> {
         .await?;
 
     let mut archive = Archive::new(&bytes[..]);
-    archive.unpack(&download_path)?;
+    if config.write_to_stdout {
+        unimplemented!()
+    } else {
+        archive.unpack(&download_path)?;
+    }
 
     Ok(())
 }
