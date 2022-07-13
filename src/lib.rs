@@ -12,6 +12,7 @@ use crate::error::DCPError;
 pub type DCPResult<T> = Result<T, Box<dyn Error>>;
 
 const DOCKER_SOCKET: &str = "unix:///var/run/docker.sock";
+pub const VERSION: &str = "0.1.0";
 
 
 #[derive(Debug)]
@@ -28,7 +29,7 @@ pub struct Config {
 
 pub fn get_args() -> DCPResult<Config> {
     let matches = App::new("dcp")
-        .version("0.1.0")
+        .version(VERSION)
         .author("exdx")
         .about("docker cp made easy")
         .arg(
