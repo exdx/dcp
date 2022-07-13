@@ -9,7 +9,7 @@ use futures_util::{TryFutureExt, StreamExt, TryStreamExt};
 
 pub type DCPResult<T> = Result<T, Box<dyn Error>>;
 
-const DOCKER_SOCKET:&str = "unix:///var/run/docker.sock";
+const DOCKER_SOCKET: &str = "unix:///var/run/docker.sock";
 
 #[derive(Debug)]
 pub struct Config {
@@ -71,6 +71,7 @@ pub fn get_args() -> DCPResult<Config> {
         write_to_stdout,
     })
 }
+
 /// Run runs a sequence of events with the provided image
 /// 1. Pull down the image
 /// 2. Create a container, receiving the container id as a response
@@ -87,8 +88,10 @@ pub async fn run(config: Config) -> DCPResult<()> {
     //     match pull_result {
     //         Ok(output) => {
     //             println!("{:?}", output);
-    //         },
-    //         Err(e) => eprintln!("{}", e),
+    //         }
+    //         Err(e) => {
+    //             eprintln!("{}", e);
+    //         }
     //     }
     // }
 
