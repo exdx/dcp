@@ -33,3 +33,10 @@ of writing, `dcp` relies on the docker APIs provided by an external crate. Unfor
 this limits `dcp` to only working on systems where docker is the container runtime.
 
 ## Flags and Examples
+
+As an example, lets try
+`dcp tyslaton/sample-catalog:v0.0.4 -d output -p configs`
+
+This command pulls down the request image, only extracting
+the `configs` directory (via the `-p` flag) and copying it to the `output` directory
+locally (via the `-d` flag). 

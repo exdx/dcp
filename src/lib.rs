@@ -95,7 +95,6 @@ pub async fn run(config: Config) -> DCPResult<()> {
     //     }
     // }
 
-    // let mut id: String = String::new();
     let create_opts = ContainerCreateOpts::builder(config.image.clone()).build();
     let container = docker.containers().create(&create_opts).await?;
     let id = container.id();
