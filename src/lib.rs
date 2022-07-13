@@ -61,7 +61,7 @@ pub fn get_args() -> DCPResult<Config> {
         .arg(
             Arg::with_name("download_path")
                 .value_name("DOWNLOAD_PATH")
-                .help("Where the contents of the image should be saved on the filesystem")
+                .help("Where the image contents should be saved on the filesystem")
                 .default_value(".")
                 .short("d")
                 .long("download_path")
