@@ -85,17 +85,16 @@ pub async fn run(config: Config) -> DCPResult<()> {
     let images = docker.images();
     let mut stream = images.pull(&pull_opts);
 
-    // TODO: close this stream somehow
-    // while let Some(pull_result) = stream.next().await {
-    //     match pull_result {
-    //         Ok(output) => {
-    //             println!("{:?}", output);
-    //         }
-    //         Err(e) => {
-    //             eprintln!("{}", e);
-    //         }
-    //     }
-    // }
+    while let Some(pull_result) = stream.next().await {
+        match pull_result {
+            Ok(output) => {
+                println!("{:?}", output);
+            }
+            Err(e) => {
+                eprintln!("{}", e);
+            }
+        }
+    }
 
     let create_opts = ContainerCreateOpts::builder(config.image.clone()).build();
     let container = docker.containers().create(&create_opts).await?;

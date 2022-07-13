@@ -22,8 +22,8 @@ image, and only then run `docker cp <container-id>` using an unintuitive syntax 
 what should be copied to the local filesystem.
 
 `dcp` is a simple binary that attempts to simplify this workflow. A user can simply
-say `dcp <image-name>` and it can extract the contents of that image on to the
-local filesystem. It can also simply print the contents of the image to stdout, and
+say `dcp <image-name>` and it can extract the contents of that image onto the
+local filesystem. It can also just print the contents of the image to stdout, and
 not create any local files.
 
 ## Implementation
