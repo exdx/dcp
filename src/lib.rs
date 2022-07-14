@@ -129,7 +129,11 @@ pub async fn run(config: Config) -> DCPResult<()> {
         }
     }
 
-    let create_opts = ContainerCreateOpts::builder(config.image.clone()).build();
+    // note(tflannag): Use a "dummy" command "FROM SCRATCH" container images.
+    let cmd = vec![""];
+    let create_opts = ContainerCreateOpts::builder(config.image.clone())
+        .cmd(&cmd)
+        .build();
     let container = docker.containers().create(&create_opts).await?;
     let id = container.id();
     println!("{:?}", id);
