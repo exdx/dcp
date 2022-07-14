@@ -27,13 +27,6 @@ pub struct Config {
     write_to_stdout: bool,
 }
 
-pub struct Image{
-    // Repo of image
-    repo: String,
-    // Tag of image
-    tag: String,
-}
-
 pub fn get_args() -> DCPResult<Config> {
     let matches = App::new("dcp")
         .version(VERSION)
@@ -87,22 +80,29 @@ pub fn get_args() -> DCPResult<Config> {
     })
 }
 
-// Returns a Result with an Image struct and an Error (if one occured)
-fn split_repo_and_tag(full_image: String) -> Image {
-    let image_split: Vec<&str> = full_image.split(":").collect();
-
-    let mut repo = String::from("");
-    if image_split.get(0) != None {
-        repo = image_split[0].to_string();
-    }
-
-    let mut tag = String::from("");
-    if image_split.get(1) != None {
-        tag = image_split[1].to_string();
-    }
-   
-    return Image{repo, tag}
+pub struct Image{
+    image: String
 }
+
+impl Image{
+    // Returns a Result with an Image struct and an Error (if one occured)
+    fn split_repo_and_tag(&self) -> (String, String) {
+        let image_split: Vec<&str> = self.image.split(":").collect();
+
+        let mut repo = String::new();
+        if let Some(i) = image_split.get(0) {
+            repo = i.to_string();
+        }
+
+        let mut tag = String::new();
+        if let Some(i) = image_split.get(1) {
+            tag = i.to_string();
+        }
+
+        return (repo, tag);
+    }
+}
+
 
 /// Run runs a sequence of events with the provided image
 /// 1. Pull down the image
@@ -111,9 +111,10 @@ fn split_repo_and_tag(full_image: String) -> Image {
 pub async fn run(config: Config) -> DCPResult<()> {
     let docker = Docker::new(DOCKER_SOCKET)?;
 
-    let image = split_repo_and_tag(config.image.clone());
+    let image = Image{image: config.image.clone()};
+    let (repo, tag) = image.split_repo_and_tag();
 
-    let pull_opts = PullOpts::builder().image(image.repo).tag(image.tag).build();
+    let pull_opts = PullOpts::builder().image(repo).tag(tag).build();
     let images = docker.images();
     let mut stream = images.pull(&pull_opts);
 
