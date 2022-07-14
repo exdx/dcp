@@ -8,6 +8,7 @@ const PRG: &str = "dcp";
 const TEST_CONTENT_DIR: &str = "/tmp/dcp_test_run";
 const DEFAULT_IMAGE: &str = "quay.io/tyslaton/sample-catalog:v0.0.4";
 const IMAGE_NO_TAG: &str = "quay.io/tyslaton/sample-catalog";
+const SCRATCH_BASE_IMAGE: &str = "quay.io/tflannag/bundles:resolveset-v0.0.2";
 
 // generate_temp_path takes the constant TEST_CONTENT_DIR and
 // returns a new string with an appended 5 digit string
@@ -73,6 +74,24 @@ fn accepts_content_path() -> TestResult {
 
 // --------------------------------------------------
 #[test]
+fn fails_invalid_content_path() -> TestResult {
+    let path = &generate_temp_path();
+    let content_path = "manifests";
+
+    // --content-path has been specified but fails as
+    // there's no "manifests" directory in the
+    // DEFAULT_IMAGE container image.
+    Command::cargo_bin(PRG)?
+        .args(&["--download-path", path])
+        .args(&["--content-path", content_path, DEFAULT_IMAGE])
+        .assert()
+        .failure();
+
+    Ok(())
+}
+
+// --------------------------------------------------
+#[test]
 fn accepts_image() -> TestResult {
     let path = &generate_temp_path();
 
@@ -118,6 +137,20 @@ fn fails_on_just_tag() -> TestResult {
         .args(&[":v0.0.4"])
         .assert()
         .failure();
+
+    Ok(())
+}
+
+// --------------------------------------------------
+#[test]
+fn accepts_scratch_base_images() -> TestResult {
+    let content_path: &str = "manifests";
+
+    Command::cargo_bin(PRG)?
+        .args(&["--content-path", content_path])
+        .args(&[SCRATCH_BASE_IMAGE])
+        .assert()
+        .success();
 
     Ok(())
 }
