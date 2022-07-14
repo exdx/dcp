@@ -60,4 +60,4 @@ If you would like to run the test suite, you just need to run the standard cargo
 $ cargo test
 ```
 
-> **Note**: Please note that in the current state of the repo running this command will write test output to `/tmp`. This output will get cleaned up automatically on shutdown. Automatically cleaning up this output was considered, however, leaving the output was favorable. In the future this project will use an in-memory file system to avoid this issue entirely.
+> **Note**: In the current state of the repo running this command will write test output to `/tmp`. This output will get cleaned up automatically on shutdown. Automatically cleaning up this output was considered, however, leaving the output was favorable. In the future this project will use an in-memory file system to avoid this issue entirely.

@@ -7,6 +7,7 @@ use std::{error::Error};
 const PRG: &str = "dcp";
 const TEST_CONTENT_DIR: &str = "/tmp/dcp_test_run";
 const DEFAULT_IMAGE: &str = "quay.io/tyslaton/sample-catalog:v0.0.4";
+const IMAGE_NO_TAG: &str = "quay.io/tyslaton/sample-catalog";
 
 // generate_temp_path takes the constant TEST_CONTENT_DIR and 
 // returns a new string with an appended 5 digit string
@@ -85,6 +86,36 @@ fn accepts_image() -> TestResult {
     // image is not defined and fails
     Command::cargo_bin(PRG)?
         .args(&["--download_path", path])
+        .assert()
+        .failure();
+
+    Ok(())
+}
+
+// --------------------------------------------------
+#[test]
+fn defaults_tag_to_latest() -> TestResult {
+    let path = &generate_temp_path();
+
+    // image is defined and succeeds
+    Command::cargo_bin(PRG)?
+        .args(&["--download_path", path])
+        .args(&[IMAGE_NO_TAG])
+        .assert()
+        .success();
+
+    Ok(())
+}
+
+// --------------------------------------------------
+#[test]
+fn fails_on_just_tag() -> TestResult {
+    let path = &generate_temp_path();
+
+    // image is defined and succeeds
+    Command::cargo_bin(PRG)?
+        .args(&["--download_path", path])
+        .args(&[":v0.0.4"])
         .assert()
         .failure();
 
