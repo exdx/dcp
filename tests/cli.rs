@@ -9,7 +9,7 @@ const TEST_CONTENT_DIR: &str = "/tmp/dcp_test_run";
 const DEFAULT_IMAGE: &str = "quay.io/tyslaton/sample-catalog:v0.0.4";
 const IMAGE_NO_TAG: &str = "quay.io/tyslaton/sample-catalog";
 
-// generate_temp_path takes the constant TEST_CONTENT_DIR and 
+// generate_temp_path takes the constant TEST_CONTENT_DIR and
 // returns a new string with an appended 5 digit string
 fn generate_temp_path() -> String {
     let random_string = thread_rng().gen_range(10000..99999);
@@ -40,7 +40,7 @@ fn accepts_download_path() -> TestResult {
 
     // content_path is defined and succeeds
     Command::cargo_bin(PRG)?
-        .args(&["--download_path", path])
+        .args(&["--download-path", path])
         .args(&[DEFAULT_IMAGE])
         .assert()
         .success();
@@ -59,8 +59,8 @@ fn accepts_content_path() -> TestResult {
 
     // content_path is defined and succeeds
     Command::cargo_bin(PRG)?
-        .args(&["--download_path", path])
-        .args(&["--content_path", content_path, DEFAULT_IMAGE])
+        .args(&["--download-path", path])
+        .args(&["--content-path", content_path, DEFAULT_IMAGE])
         .assert()
         .success();
 
@@ -78,14 +78,14 @@ fn accepts_image() -> TestResult {
 
     // image is defined and succeeds
     Command::cargo_bin(PRG)?
-        .args(&["--download_path", path])
+        .args(&["--download-path", path])
         .args(&[DEFAULT_IMAGE])
         .assert()
         .success();
 
     // image is not defined and fails
     Command::cargo_bin(PRG)?
-        .args(&["--download_path", path])
+        .args(&["--download-path", path])
         .assert()
         .failure();
 
@@ -99,7 +99,7 @@ fn defaults_tag_to_latest() -> TestResult {
 
     // image is defined and succeeds
     Command::cargo_bin(PRG)?
-        .args(&["--download_path", path])
+        .args(&["--download-path", path])
         .args(&[IMAGE_NO_TAG])
         .assert()
         .success();
@@ -114,7 +114,7 @@ fn fails_on_just_tag() -> TestResult {
 
     // image is defined and succeeds
     Command::cargo_bin(PRG)?
-        .args(&["--download_path", path])
+        .args(&["--download-path", path])
         .args(&[":v0.0.4"])
         .assert()
         .failure();

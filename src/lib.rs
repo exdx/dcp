@@ -39,34 +39,34 @@ pub fn get_args() -> DCPResult<Config> {
                 .required(true)
         )
         .arg(
-            Arg::with_name("download_path")
-                .value_name("DOWNLOAD_PATH")
+            Arg::with_name("download-path")
+                .value_name("DOWNLOAD-PATH")
                 .help("Where the image contents should be saved on the filesystem")
                 .default_value(".")
                 .short("d")
-                .long("download_path")
+                .long("download-path")
         )
         .arg(
-            Arg::with_name("content_path")
-                .value_name("CONTENT_PATH")
+            Arg::with_name("content-path")
+                .value_name("CONTENT-PATH")
                 .help("Where in the container filesystem the content to extract is")
                 .short("p")
                 .default_value("/")
-                .long("content_path")
+                .long("content-path")
         )
         .arg(
-            Arg::with_name("write_to_stdout")
-                .value_name("WRITE_TO_STDOUT")
+            Arg::with_name("write-to-stdout")
+                .value_name("WRITE-TO-STDOUT")
                 .help("Whether to write to stdout instead of the filesystem")
                 .takes_value(false)
                 .short("w")
-                .long("write_to_stdout")
+                .long("write-to-stdout")
         ).get_matches();
 
     let image = matches.value_of("image").unwrap().to_string();
-    let download_path = matches.value_of("download_path").unwrap().to_string();
-    let content_path = matches.value_of("content_path").unwrap().to_string();
-    let write_to_stdout = matches.is_present("write_to_stdout");
+    let download_path = matches.value_of("download-path").unwrap().to_string();
+    let content_path = matches.value_of("content-path").unwrap().to_string();
+    let write_to_stdout = matches.is_present("write-to-stdout");
 
     if write_to_stdout {
         return Err(Box::new(DCPError::new("error: writing to stdout is not currently implemented")));
