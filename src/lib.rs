@@ -12,7 +12,7 @@ use crate::error::DCPError;
 pub type DCPResult<T> = Result<T, Box<dyn Error>>;
 
 const DOCKER_SOCKET: &str = "unix:///var/run/docker.sock";
-pub const VERSION: &str = "0.1.0";
+pub const VERSION: &str = "0.2.0";
 
 
 #[derive(Debug)]
