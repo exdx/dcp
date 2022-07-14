@@ -1,38 +1,17 @@
+mod error;
+
 use clap::{App, Arg};
 use std::error::Error;
 use docker_api::{Docker};
 use docker_api::api::{PullOpts, ContainerCreateOpts};
 use std::path::PathBuf;
-use std::fmt;
 use tar::Archive;
 use futures_util::{StreamExt, TryStreamExt};
+use crate::error::DCPError;
 
 pub type DCPResult<T> = Result<T, Box<dyn Error>>;
 
 const DOCKER_SOCKET: &str = "unix:///var/run/docker.sock";
-
-#[derive(Debug)]
-struct MyError {
-    details: String
-}
-
-impl MyError {
-    fn new(msg: &str) -> MyError {
-        MyError{details: msg.to_string()}
-    }
-}
-
-impl fmt::Display for MyError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f,"{}",self.details)
-    }
-}
-
-impl Error for MyError {
-    fn description(&self) -> &str {
-        &self.details
-    }
-}
 
 
 #[derive(Debug)]
@@ -89,7 +68,7 @@ pub fn get_args() -> DCPResult<Config> {
     let write_to_stdout = matches.is_present("write_to_stdout");
 
     if write_to_stdout {
-       return Err(Box::new(MyError::new("error: write to stdout is not currently implemented")));
+        return Err(Box::new(DCPError::new("error: writing to stdout is not currently implemented")));
     }
 
     Ok(Config {
