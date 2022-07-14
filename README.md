@@ -26,6 +26,24 @@ say `dcp <image-name>` and it can extract the contents of that image onto the
 local filesystem. It can also just print the contents of the image to stdout, and
 not create any local files.
 
+## Installing 
+
+### Download compiled binary
+
+The [release section](https://github.com/exdx/dcp/releases) has a number
+of precompiled versions of dcp for different platforms. Currently only Linux and
+MacOS are pre-built. For MacOS, both arm and x86 targets are provided, and 
+for Linux only x86 is provided. If your system is not supported, building dcp from
+the source is straightforward.
+
+### Build from source
+
+To build from source, ensure that you have the rust toolchain installed locally.
+This project does not rely on nightly and uses the 1.62-stable toolchain. 
+Clone the repository and run `cargo build --release` to build a release version
+of the binary. From there, you can move the binary to a folder on your $PATH to access
+it easily. 
+
 ## Implementation
 
 Because there wasn't a suitable `containerd` client implementation in Rust at the time
