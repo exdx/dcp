@@ -1,4 +1,4 @@
-name: Rust
+name: ci
 
 on:
   push:
@@ -10,8 +10,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-
+  ci:
     runs-on: ubuntu-latest
 
     steps:
