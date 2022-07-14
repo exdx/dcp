@@ -27,6 +27,13 @@ pub struct Config {
     write_to_stdout: bool,
 }
 
+pub struct Image{
+    // Repo of image
+    repo: String,
+    // Tag of image
+    tag: String,
+}
+
 pub fn get_args() -> DCPResult<Config> {
     let matches = App::new("dcp")
         .version(VERSION)
@@ -80,6 +87,23 @@ pub fn get_args() -> DCPResult<Config> {
     })
 }
 
+// Returns a Result with an Image struct and an Error (if one occured)
+fn split_repo_and_tag(full_image: String) -> Image {
+    let image_split: Vec<&str> = full_image.split(":").collect();
+
+    let mut repo = String::from("");
+    if image_split.get(0) != None {
+        repo = image_split[0].to_string();
+    }
+
+    let mut tag = String::from("");
+    if image_split.get(1) != None {
+        tag = image_split[1].to_string();
+    }
+   
+    return Image{repo, tag}
+}
+
 /// Run runs a sequence of events with the provided image
 /// 1. Pull down the image
 /// 2. Create a container, receiving the container id as a response
@@ -87,7 +111,9 @@ pub fn get_args() -> DCPResult<Config> {
 pub async fn run(config: Config) -> DCPResult<()> {
     let docker = Docker::new(DOCKER_SOCKET)?;
 
-    let pull_opts = PullOpts::builder().image(config.image.clone()).build();
+    let image = split_repo_and_tag(config.image.clone());
+
+    let pull_opts = PullOpts::builder().image(image.repo).tag(image.tag).build();
     let images = docker.images();
     let mut stream = images.pull(&pull_opts);
 
