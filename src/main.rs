@@ -5,9 +5,7 @@ async fn main() -> dcp::DCPResult<()> {
             eprintln!("{}", e);
             std::process::exit(1)
         }
-        Ok(config) => {
-            dcp::run(config).await?
-        }
+        Ok(config) => dcp::run(config).await?,
     }
 
     Ok(())

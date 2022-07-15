@@ -10,12 +10,28 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  ci:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Lint
+        run: cargo fmt && git diff --exit-code
+
+  build:
+    needs: lint
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
       - name: Build
         run: cargo build --verbose
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
       - name: Run tests
         run: cargo test --verbose

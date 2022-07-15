@@ -1,19 +1,18 @@
 mod error;
 
+use crate::error::DCPError;
 use clap::{App, Arg};
+use docker_api::api::{ContainerCreateOpts, PullOpts};
+use docker_api::Docker;
+use futures_util::{StreamExt, TryStreamExt};
 use std::error::Error;
-use docker_api::{Docker};
-use docker_api::api::{PullOpts, ContainerCreateOpts};
 use std::path::PathBuf;
 use tar::Archive;
-use futures_util::{StreamExt, TryStreamExt};
-use crate::error::DCPError;
 
 pub type DCPResult<T> = Result<T, Box<dyn Error>>;
 
 const DOCKER_SOCKET: &str = "unix:///var/run/docker.sock";
 pub const VERSION: &str = "0.2.0";
-
 
 #[derive(Debug)]
 pub struct Config {
@@ -36,7 +35,7 @@ pub fn get_args() -> DCPResult<Config> {
             Arg::with_name("image")
                 .value_name("IMAGE")
                 .help("Container image to extract content from")
-                .required(true)
+                .required(true),
         )
         .arg(
             Arg::with_name("download-path")
@@ -44,7 +43,7 @@ pub fn get_args() -> DCPResult<Config> {
                 .help("Where the image contents should be saved on the filesystem")
                 .default_value(".")
                 .short("d")
-                .long("download-path")
+                .long("download-path"),
         )
         .arg(
             Arg::with_name("content-path")
@@ -52,7 +51,7 @@ pub fn get_args() -> DCPResult<Config> {
                 .help("Where in the container filesystem the content to extract is")
                 .short("p")
                 .default_value("/")
-                .long("content-path")
+                .long("content-path"),
         )
         .arg(
             Arg::with_name("write-to-stdout")
@@ -60,8 +59,9 @@ pub fn get_args() -> DCPResult<Config> {
                 .help("Whether to write to stdout instead of the filesystem")
                 .takes_value(false)
                 .short("w")
-                .long("write-to-stdout")
-        ).get_matches();
+                .long("write-to-stdout"),
+        )
+        .get_matches();
 
     let image = matches.value_of("image").unwrap().to_string();
     let download_path = matches.value_of("download-path").unwrap().to_string();
@@ -69,7 +69,9 @@ pub fn get_args() -> DCPResult<Config> {
     let write_to_stdout = matches.is_present("write-to-stdout");
 
     if write_to_stdout {
-        return Err(Box::new(DCPError::new("error: writing to stdout is not currently implemented")));
+        return Err(Box::new(DCPError::new(
+            "error: writing to stdout is not currently implemented",
+        )));
     }
 
     Ok(Config {
@@ -80,11 +82,11 @@ pub fn get_args() -> DCPResult<Config> {
     })
 }
 
-pub struct Image{
-    image: String
+pub struct Image {
+    image: String,
 }
 
-impl Image{
+impl Image {
     // Returns a Result with an Image struct and an Error (if one occured)
     fn split_repo_and_tag(&self) -> (String, String) {
         let image_split: Vec<&str> = self.image.split(":").collect();
@@ -103,7 +105,6 @@ impl Image{
     }
 }
 
-
 /// Run runs a sequence of events with the provided image
 /// 1. Pull down the image
 /// 2. Create a container, receiving the container id as a response
@@ -111,7 +112,9 @@ impl Image{
 pub async fn run(config: Config) -> DCPResult<()> {
     let docker = Docker::new(DOCKER_SOCKET)?;
 
-    let image = Image{image: config.image.clone()};
+    let image = Image {
+        image: config.image.clone(),
+    };
     let (repo, tag) = image.split_repo_and_tag();
 
     let pull_opts = PullOpts::builder().image(repo).tag(tag).build();
