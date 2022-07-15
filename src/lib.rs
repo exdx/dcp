@@ -2,12 +2,13 @@ mod error;
 
 use crate::error::DCPError;
 use clap::{App, Arg};
-use docker_api::api::{ContainerCreateOpts, PullOpts};
+use docker_api::api::{ContainerCreateOpts, PullOpts, RmContainerOpts};
 use docker_api::Docker;
 use futures_util::{StreamExt, TryStreamExt};
 use std::error::Error;
 use std::path::PathBuf;
 use tar::Archive;
+
 extern crate pretty_env_logger;
 #[macro_use]
 extern crate log;
@@ -102,7 +103,6 @@ pub struct Image {
 }
 
 impl Image {
-    // Returns a Result with an Image struct and an Error (if one occured)
     fn split_repo_and_tag(&self) -> (String, String) {
         let image_split: Vec<&str> = self.image.split(":").collect();
 
@@ -124,6 +124,7 @@ impl Image {
 /// 1. Pull down the image
 /// 2. Create a container, receiving the container id as a response
 /// 3. Copy the container content to the specified directory
+/// 4. Delete the container
 pub async fn run(config: Config) -> DCPResult<()> {
     pretty_env_logger::formatted_builder()
         .parse_filters(&config.log_level.clone())
@@ -184,6 +185,13 @@ pub async fn run(config: Config) -> DCPResult<()> {
         "✅ Copied content to {} successfully",
         download_path.display()
     );
+
+    let delete_opts = RmContainerOpts::builder().force(true).build();
+    if let Err(e) = docker.containers().get(&*id).remove(&delete_opts).await {
+        error!("❌ Error cleaning up container {}", e);
+    }
+
+    debug!("✅ Cleaned up container {:?} successfully", id);
 
     Ok(())
 }
