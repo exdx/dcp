@@ -2,7 +2,7 @@ use assert_cmd::Command;
 use dcp::VERSION;
 use predicates::prelude::*;
 use rand::{thread_rng, Rng};
-use std::{error::Error};
+use std::error::Error;
 
 const PRG: &str = "dcp";
 const TEST_CONTENT_DIR: &str = "/tmp/dcp_test_run";
