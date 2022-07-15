@@ -5,7 +5,7 @@ use rand::{thread_rng, Rng};
 use std::error::Error;
 
 const PRG: &str = "dcp";
-const TEST_CONTENT_DIR: &str = "/tmp/dcp_test_run";
+const TEST_CONTENT_DIR: &str = "./test_runs";
 const DEFAULT_IMAGE: &str = "quay.io/tyslaton/sample-catalog:v0.0.4";
 const IMAGE_NO_TAG: &str = "quay.io/tyslaton/sample-catalog";
 const SCRATCH_BASE_IMAGE: &str = "quay.io/tflannag/bundles:resolveset-v0.0.2";
@@ -14,7 +14,7 @@ const SCRATCH_BASE_IMAGE: &str = "quay.io/tflannag/bundles:resolveset-v0.0.2";
 // returns a new string with an appended 5 digit string
 fn generate_temp_path() -> String {
     let random_string = thread_rng().gen_range(10000..99999);
-    return format!("{}_{}", TEST_CONTENT_DIR, random_string);
+    return format!("{}/{}", TEST_CONTENT_DIR, random_string);
 }
 
 type TestResult = Result<(), Box<dyn Error>>;
