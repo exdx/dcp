@@ -16,7 +16,7 @@ extern crate log;
 pub type DCPResult<T> = Result<T, Box<dyn Error>>;
 
 const DOCKER_SOCKET: &str = "unix:///var/run/docker.sock";
-pub const VERSION: &str = "0.2.0";
+pub const VERSION: &str = "0.2.1";
 
 #[derive(Debug)]
 pub struct Config {
