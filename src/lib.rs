@@ -8,6 +8,9 @@ use futures_util::{StreamExt, TryStreamExt};
 use std::error::Error;
 use std::path::PathBuf;
 use tar::Archive;
+extern crate pretty_env_logger;
+#[macro_use]
+extern crate log;
 
 pub type DCPResult<T> = Result<T, Box<dyn Error>>;
 
@@ -24,6 +27,8 @@ pub struct Config {
     content_path: String,
     // Option to write to stdout instead of the local filesystem.
     write_to_stdout: bool,
+    // What level of logs to output
+    log_level: String,
 }
 
 pub fn get_args() -> DCPResult<Config> {
@@ -61,12 +66,21 @@ pub fn get_args() -> DCPResult<Config> {
                 .short("w")
                 .long("write-to-stdout"),
         )
+        .arg(
+            Arg::with_name("log-level")
+                .value_name("LOG-LEVEL")
+                .help("What level of logs to output. Accepts: [info, debug, trace, error, warn]")
+                .short("l")
+                .long("log-level")
+                .default_value("debug"),
+        )
         .get_matches();
 
     let image = matches.value_of("image").unwrap().to_string();
     let download_path = matches.value_of("download-path").unwrap().to_string();
     let content_path = matches.value_of("content-path").unwrap().to_string();
     let write_to_stdout = matches.is_present("write-to-stdout");
+    let log_level = matches.value_of("log-level").unwrap().to_string();
 
     if write_to_stdout {
         return Err(Box::new(DCPError::new(
@@ -79,6 +93,7 @@ pub fn get_args() -> DCPResult<Config> {
         download_path,
         content_path,
         write_to_stdout,
+        log_level,
     })
 }
 
@@ -110,6 +125,10 @@ impl Image {
 /// 2. Create a container, receiving the container id as a response
 /// 3. Copy the container content to the specified directory
 pub async fn run(config: Config) -> DCPResult<()> {
+    pretty_env_logger::formatted_builder()
+        .parse_filters(&config.log_level.clone())
+        .init();
+
     let docker = Docker::new(DOCKER_SOCKET)?;
 
     let image = Image {
@@ -124,10 +143,10 @@ pub async fn run(config: Config) -> DCPResult<()> {
     while let Some(pull_result) = stream.next().await {
         match pull_result {
             Ok(output) => {
-                println!("{:?}", output);
+                debug!("🔧 {:?}", output);
             }
             Err(e) => {
-                eprintln!("{}", e);
+                error!("❌ {}", e);
             }
         }
     }
@@ -139,7 +158,7 @@ pub async fn run(config: Config) -> DCPResult<()> {
         .build();
     let container = docker.containers().create(&create_opts).await?;
     let id = container.id();
-    println!("{:?}", id);
+    debug!("📦 Created container with id: {:?}", id);
 
     let mut content_path = PathBuf::new();
     content_path.push(&config.content_path);
@@ -160,6 +179,11 @@ pub async fn run(config: Config) -> DCPResult<()> {
     } else {
         archive.unpack(&download_path)?;
     }
+
+    info!(
+        "✅ Copied content to {} successfully",
+        download_path.display()
+    );
 
     Ok(())
 }
