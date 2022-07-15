@@ -144,9 +144,11 @@ fn fails_on_just_tag() -> TestResult {
 // --------------------------------------------------
 #[test]
 fn accepts_scratch_base_images() -> TestResult {
+    let path = &generate_temp_path();
     let content_path: &str = "manifests";
 
     Command::cargo_bin(PRG)?
+        .args(&["--download-path", path])
         .args(&["--content-path", content_path])
         .args(&[SCRATCH_BASE_IMAGE])
         .assert()
