@@ -3,6 +3,7 @@ use dcp::VERSION;
 use predicates::prelude::*;
 use rand::{thread_rng, Rng};
 use std::error::Error;
+use std::fs::remove_dir_all;
 
 const PRG: &str = "dcp";
 const TEST_CONTENT_DIR: &str = "./test_runs";
@@ -14,7 +15,22 @@ const SCRATCH_BASE_IMAGE: &str = "quay.io/tflannag/bundles:resolveset-v0.0.2";
 // returns a new string with an appended 5 digit string
 fn generate_temp_path() -> String {
     let random_string = thread_rng().gen_range(10000..99999);
-    return format!("{}/{}", TEST_CONTENT_DIR, random_string);
+    format!("{}/{}", TEST_CONTENT_DIR, random_string)
+}
+
+// clean_up_test_dir removes the testing directory specified completely.
+//
+// WARNING: This function is deleting directories recursively, if you are
+//          using it, be absolutely sure you know what you're doing.
+fn clean_up_test_dir(path: &str) {
+    if path.starts_with(TEST_CONTENT_DIR) {
+        match remove_dir_all(path) {
+            Ok(_) => {}
+            Err(e) => {
+                eprintln!("failed to delete testing dir {}:{}", path, e);
+            }
+        }
+    }
 }
 
 type TestResult = Result<(), Box<dyn Error>>;
@@ -49,6 +65,8 @@ fn accepts_download_path() -> TestResult {
     // verify that content was written to the desired download_path
     assert_eq!(std::path::Path::new(path).exists(), true);
 
+    clean_up_test_dir(path);
+
     Ok(())
 }
 
@@ -69,6 +87,8 @@ fn accepts_content_path() -> TestResult {
     let specific_content = &format!("{}/{}", path, content_path);
     assert_eq!(std::path::Path::new(specific_content).exists(), true);
 
+    clean_up_test_dir(path);
+
     Ok(())
 }
 
@@ -86,6 +106,8 @@ fn fails_invalid_content_path() -> TestResult {
         .args(&["--content-path", content_path, DEFAULT_IMAGE])
         .assert()
         .failure();
+
+    clean_up_test_dir(path);
 
     Ok(())
 }
@@ -108,6 +130,8 @@ fn accepts_image() -> TestResult {
         .assert()
         .failure();
 
+    clean_up_test_dir(path);
+
     Ok(())
 }
 
@@ -122,6 +146,8 @@ fn defaults_tag_to_latest() -> TestResult {
         .args(&[IMAGE_NO_TAG])
         .assert()
         .success();
+
+    clean_up_test_dir(path);
 
     Ok(())
 }
@@ -138,6 +164,8 @@ fn fails_on_just_tag() -> TestResult {
         .assert()
         .failure();
 
+    clean_up_test_dir(path);
+
     Ok(())
 }
 
@@ -153,6 +181,8 @@ fn accepts_scratch_base_images() -> TestResult {
         .args(&[SCRATCH_BASE_IMAGE])
         .assert()
         .success();
+
+    clean_up_test_dir(path);
 
     Ok(())
 }
