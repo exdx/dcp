@@ -191,7 +191,7 @@ pub async fn run(config: Config) -> DCPResult<()> {
         error!("❌ Error cleaning up container {}", e);
     }
 
-    debug!("✅ Cleaned up container {:?} successfully", id);
+    debug!("📦 Cleaned up container {:?} successfully", id);
 
     Ok(())
 }
