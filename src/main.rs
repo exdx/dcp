@@ -1,5 +1,7 @@
+use anyhow::Result;
+
 #[tokio::main]
-async fn main() -> dcp::DCPResult<()> {
+async fn main() -> Result<()> {
     match dcp::get_args() {
         Err(e) => {
             eprintln!("{}", e);
