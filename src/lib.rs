@@ -6,6 +6,8 @@ use futures_util::{StreamExt, TryStreamExt};
 use std::path::PathBuf;
 use tar::Archive;
 
+mod image;
+
 extern crate pretty_env_logger;
 #[macro_use]
 extern crate log;
@@ -93,28 +95,6 @@ pub fn get_args() -> Result<Config> {
     })
 }
 
-pub struct Image {
-    image: String,
-}
-
-impl Image {
-    fn split_repo_and_tag(&self) -> (String, String) {
-        let image_split: Vec<&str> = self.image.split(":").collect();
-
-        let mut repo = String::new();
-        if let Some(i) = image_split.get(0) {
-            repo = i.to_string();
-        }
-
-        let mut tag = String::new();
-        if let Some(i) = image_split.get(1) {
-            tag = i.to_string();
-        }
-
-        return (repo, tag);
-    }
-}
-
 /// Run runs a sequence of events with the provided image
 /// 1. Pull down the image
 /// 2. Create a container, receiving the container id as a response
@@ -127,10 +107,23 @@ pub async fn run(config: Config) -> Result<()> {
 
     let docker = Docker::new(DOCKER_SOCKET)?;
 
-    let image = Image {
+    let image = image::Image {
         image: config.image.clone(),
     };
-    let (repo, tag) = image.split_repo_and_tag();
+
+    let repo: String;
+    let tag: String;
+    match image.split() {
+        Some(image) => {
+            repo = image.0;
+            tag = image.1;
+        }
+        None => {
+            return Err(anyhow!(
+                "could not split provided image into repository and tag"
+            ))
+        }
+    }
 
     let pull_opts = PullOpts::builder().image(repo).tag(tag).build();
     let images = docker.images();
