@@ -1,19 +1,14 @@
-mod error;
-
-use crate::error::DCPError;
+use anyhow::{anyhow, Result};
 use clap::{App, Arg};
 use docker_api::api::{ContainerCreateOpts, PullOpts, RmContainerOpts};
 use docker_api::Docker;
 use futures_util::{StreamExt, TryStreamExt};
-use std::error::Error;
 use std::path::PathBuf;
 use tar::Archive;
 
 extern crate pretty_env_logger;
 #[macro_use]
 extern crate log;
-
-pub type DCPResult<T> = Result<T, Box<dyn Error>>;
 
 const DOCKER_SOCKET: &str = "unix:///var/run/docker.sock";
 pub const VERSION: &str = "0.2.1";
@@ -32,7 +27,7 @@ pub struct Config {
     log_level: String,
 }
 
-pub fn get_args() -> DCPResult<Config> {
+pub fn get_args() -> Result<Config> {
     let matches = App::new("dcp")
         .version(VERSION)
         .author("exdx")
@@ -84,10 +79,10 @@ pub fn get_args() -> DCPResult<Config> {
     let log_level = matches.value_of("log-level").unwrap().to_string();
 
     if write_to_stdout {
-        return Err(Box::new(DCPError::new(
-            "error: writing to stdout is not currently implemented",
-        )));
-    }
+        return Err(anyhow!(
+            "error: writing to stdout is not currently implemented"
+        ));
+    };
 
     Ok(Config {
         image,
@@ -125,7 +120,7 @@ impl Image {
 /// 2. Create a container, receiving the container id as a response
 /// 3. Copy the container content to the specified directory
 /// 4. Delete the container
-pub async fn run(config: Config) -> DCPResult<()> {
+pub async fn run(config: Config) -> Result<()> {
     pretty_env_logger::formatted_builder()
         .parse_filters(&config.log_level.clone())
         .init();
