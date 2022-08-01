@@ -1,5 +1,7 @@
 # dcp: docker cp made easy
 
+[![GitHub Actions](https://github.com/exdx/dcp/workflows/ci/badge.svg)](https://github.com/exdx/dcp/actions) [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE) 
+
 ## Summary
 
 Containers are great tools that can encapsulate an application and its dependencies,
