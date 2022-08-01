@@ -1,18 +1,19 @@
 use anyhow::{anyhow, Result};
 use clap::{App, Arg};
 use docker_api::api::{ContainerCreateOpts, PullOpts, RmContainerOpts};
-use docker_api::Docker;
 use futures_util::{StreamExt, TryStreamExt};
+use podman_api::opts::ContainerCreateOpts as PodmanContainerCreateOpts;
+use podman_api::opts::PullOpts as PodmanPullOpts;
 use std::path::PathBuf;
 use tar::Archive;
 
 mod image;
+mod runtime;
 
 extern crate pretty_env_logger;
 #[macro_use]
 extern crate log;
 
-const DOCKER_SOCKET: &str = "unix:///var/run/docker.sock";
 pub const VERSION: &str = "0.2.1";
 
 #[derive(Debug)]
@@ -96,6 +97,7 @@ pub fn get_args() -> Result<Config> {
 }
 
 /// Run runs a sequence of events with the provided image
+/// Run supports copying container filesystems running on both the docker and podman runtimes
 /// 1. Pull down the image
 /// 2. Create a container, receiving the container id as a response
 /// 3. Copy the container content to the specified directory
@@ -104,8 +106,6 @@ pub async fn run(config: Config) -> Result<()> {
     pretty_env_logger::formatted_builder()
         .parse_filters(&config.log_level.clone())
         .init();
-
-    let docker = Docker::new(DOCKER_SOCKET)?;
 
     let image = image::Image {
         image: config.image.clone(),
@@ -125,29 +125,71 @@ pub async fn run(config: Config) -> Result<()> {
         }
     }
 
-    let pull_opts = PullOpts::builder().image(repo).tag(tag).build();
-    let images = docker.images();
-    let mut stream = images.pull(&pull_opts);
+    let rt = if let Some(runtime) = runtime::set().await {
+        runtime
+    } else {
+        return Err(anyhow!("no valid container runtime"));
+    };
 
-    while let Some(pull_result) = stream.next().await {
-        match pull_result {
-            Ok(output) => {
-                debug!("🔧 {:?}", output);
+    if let Some(docker) = &rt.docker {
+        let pull_opts = PullOpts::builder().image(repo).tag(tag).build();
+        let images = docker.images();
+        let mut stream = images.pull(&pull_opts);
+
+        while let Some(pull_result) = stream.next().await {
+            match pull_result {
+                Ok(output) => {
+                    debug!("🔧 {:?}", output);
+                }
+                Err(e) => {
+                    error!("❌ pulling image {}", e);
+                }
             }
-            Err(e) => {
-                error!("❌ {}", e);
+        }
+    } else {
+        let pull_opts = PodmanPullOpts::builder()
+            .reference(config.image.clone().trim())
+            .build();
+        let images = rt.podman.as_ref().unwrap().images();
+        let mut stream = images.pull(&pull_opts);
+
+        while let Some(pull_result) = stream.next().await {
+            match pull_result {
+                Ok(output) => {
+                    debug!("🔧 {:?}", output);
+                }
+                Err(e) => {
+                    error!("❌ pulling image: {}", e);
+                }
             }
         }
     }
 
     // note(tflannag): Use a "dummy" command "FROM SCRATCH" container images.
     let cmd = vec![""];
-    let create_opts = ContainerCreateOpts::builder(config.image.clone())
-        .cmd(&cmd)
-        .build();
-    let container = docker.containers().create(&create_opts).await?;
-    let id = container.id();
-    debug!("📦 Created container with id: {:?}", id);
+    let id;
+    if let Some(docker) = &rt.docker {
+        let create_opts = ContainerCreateOpts::builder(config.image.clone())
+            .cmd(&cmd)
+            .build();
+        let container = docker.containers().create(&create_opts).await?;
+        id = container.id().to_string();
+        debug!("📦 Created container with id: {:?}", id);
+    } else {
+        let create_opts = PodmanContainerCreateOpts::builder()
+            .image(config.image.clone().trim())
+            .command(&cmd)
+            .build();
+        let container = rt
+            .podman
+            .as_ref()
+            .unwrap()
+            .containers()
+            .create(&create_opts)
+            .await?;
+        id = container.id;
+        debug!("📦 Created container with id: {:?}", id);
+    }
 
     let mut content_path = PathBuf::new();
     content_path.push(&config.content_path);
@@ -155,12 +197,25 @@ pub async fn run(config: Config) -> Result<()> {
     let mut download_path = PathBuf::new();
     download_path.push(&config.download_path);
 
-    let bytes = docker
-        .containers()
-        .get(&*id)
-        .copy_from(&content_path)
-        .try_concat()
-        .await?;
+    let bytes;
+    if let Some(docker) = &rt.docker {
+        bytes = docker
+            .containers()
+            .get(&*id)
+            .copy_from(&content_path)
+            .try_concat()
+            .await?;
+    } else {
+        bytes = rt
+            .podman
+            .as_ref()
+            .unwrap()
+            .containers()
+            .get(&*id)
+            .copy_from(&content_path)
+            .try_concat()
+            .await?;
+    }
 
     let mut archive = Archive::new(&bytes[..]);
     if config.write_to_stdout {
@@ -174,12 +229,32 @@ pub async fn run(config: Config) -> Result<()> {
         download_path.display()
     );
 
-    let delete_opts = RmContainerOpts::builder().force(true).build();
-    if let Err(e) = docker.containers().get(&*id).remove(&delete_opts).await {
-        error!("❌ Error cleaning up container {}", e);
+    if let Some(docker) = &rt.docker {
+        let delete_opts = RmContainerOpts::builder().force(true).build();
+        if let Err(e) = docker.containers().get(&*id).remove(&delete_opts).await {
+            error!("❌ cleaning up container {}", e);
+            Ok(())
+        } else {
+            debug!("📦 Cleaned up container {:?} successfully", id);
+            Ok(())
+        }
+    } else {
+        match rt
+            .podman
+            .as_ref()
+            .unwrap()
+            .containers()
+            .prune(&Default::default())
+            .await
+        {
+            Ok(_) => {
+                debug!("📦 Cleaned up container {:?} successfully", id);
+                Ok(())
+            }
+            Err(e) => {
+                eprintln!("{}", e);
+                Ok(())
+            }
+        }
     }
-
-    debug!("📦 Cleaned up container {:?} successfully", id);
-
-    Ok(())
 }

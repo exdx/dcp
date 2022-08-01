@@ -27,11 +27,28 @@ jobs:
       - name: Build
         run: cargo build --verbose
 
-  test:
+  e2e-docker:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
-      - name: Run tests
+      - name: Run e2e tests with docker tests
         run: cargo test --verbose
+
+  e2e-podman:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run podman tests
+        run: |
+          sudo systemctl stop docker
+          sudo systemctl stop docker.socket
+          echo "podman info"
+          podman info
+          systemctl --user enable --now podman.socket
+          cargo test --verbose
+
+
