@@ -49,8 +49,9 @@ it easily.
 ## Implementation
 
 Because there wasn't a suitable `containerd` client implementation in Rust at the time
-of writing, `dcp` relies on the docker APIs provided by an external crate. Unfortunately,
-this limits `dcp` to only working on systems where docker is the container runtime.
+of writing, `dcp` relies on APIs provided by an external crate. This limits `dcp` to working on systems where docker or podman is the container runtime.
+
+By default, `dcp` will look for an active docker socket to connect to at the standard path. If the docker socket is unavailable, `dcp` will fallback to the current user's podman socket based on the $XDG_RUNTIME_DIR environment variable.
 
 ## Flags and Examples
 
