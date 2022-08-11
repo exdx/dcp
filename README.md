@@ -8,8 +8,8 @@ Containers are great tools that can encapsulate an application and its dependenc
 allowing apps to run anywhere in a streamlined way. Some container images contain
 commands to start a long-lived binary, whereas others may simply contain data
 that needs to be available in the environment (for example, a Kubernetes cluster).
-For example, the operator-framework `bundle` format is an example of using
-containers image to store manifests, which can be unpacked on-cluster and made
+For example, [operator-framework bundles](https://olm.operatorframework.io/docs/tasks/creating-operator-bundle/) and [crossplane packages](https://crossplane.io/docs/v1.9/concepts/packages.html) are examples of using
+container images to store manifests, which can be unpacked on-cluster and made
 available to end users.
 
 One of the downsides of using container images to store data is that they are
