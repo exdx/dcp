@@ -58,15 +58,15 @@ By default, dcp will copy content to the current directory `.`. For example, let
 try issuing the following command:
 
 ```
-$ dcp tyslaton/sample-catalog:v0.0.4 -p configs
+$ dcp tyslaton/sample-catalog:v0.0.4 -c configs
 ```
 
-This command will copy the `configs` directory (specified via the `-p` flag) from the image to the current directory.
+This command will copy the `configs` directory (specified via the `c` flag) from the image to the current directory.
 
 For further configuration, lets try:
 
 ```
-$ dcp tyslaton/sample-catalog:v0.0.4 -d output -p configs
+$ dcp tyslaton/sample-catalog:v0.0.4 -d output -c configs
 ```
 
 This command pulls down the requested image, only extracting
@@ -76,8 +76,21 @@ locally (specified via the `-d` flag).
 Another example, for copying only the manifests directory:
 
 ```
-$ dcp quay.io/tflannag/bundles:resolveset-v0.0.2 -p manifests
+$ dcp quay.io/tflannag/bundles:resolveset-v0.0.2 -c manifests
 ```
+
+Lastly, we can reference a private registry by providing a username
+and password (specified via the `-u` and `-p` flags).
+
+```
+$ dcp quay.io/tyslaton/sample-catalog-private:latest -u <username> -p <password>
+```
+
+**Note**: This serves as a convenient way to connect to private 
+registries but is insecure locally as your credentials are saved in
+your shell's history. If you would like to remain completely secure then
+login via `<container_runtime> login` and pull the image locally. `dcp` 
+will then be able to notice the image locally pulled and process it.
 
 ## Testing
 
