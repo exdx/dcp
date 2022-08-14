@@ -1,9 +1,10 @@
 use anyhow::{anyhow, Result};
 use clap::{App, Arg};
-use docker_api::api::{ContainerCreateOpts, PullOpts, RmContainerOpts};
+use docker_api::api::{ContainerCreateOpts, PullOpts, RegistryAuth, RmContainerOpts};
 use futures_util::{StreamExt, TryStreamExt};
 use podman_api::opts::ContainerCreateOpts as PodmanContainerCreateOpts;
 use podman_api::opts::PullOpts as PodmanPullOpts;
+use podman_api::opts::RegistryAuth as PodmanRegistryAuth;
 use std::path::PathBuf;
 use tar::Archive;
 
@@ -28,6 +29,10 @@ pub struct Config {
     write_to_stdout: bool,
     // What level of logs to output
     log_level: String,
+    // Username for singing into a private registry
+    username: String,
+    // Password for signing into a private registry
+    password: String,
 }
 
 pub fn get_args() -> Result<Config> {
@@ -66,6 +71,24 @@ pub fn get_args() -> Result<Config> {
                 .long("write-to-stdout"),
         )
         .arg(
+            Arg::with_name("username")
+                .value_name("USERNAME")
+                .help("Username used for singing into a private registry.")
+                .short("u")
+                .long("username")
+                .default_value(""),
+
+        )
+        .arg(
+            Arg::with_name("password")
+                .value_name("PASSWORD")
+                .help("Password used for signing into a private registry. * WARNING *: Writing credentials to your terminal is risky. Be sure you are okay with them showing up in your history")
+                .short("p")
+                .long("password")
+                .default_value(""),
+
+        )
+        .arg(
             Arg::with_name("log-level")
                 .value_name("LOG-LEVEL")
                 .help("What level of logs to output. Accepts: [info, debug, trace, error, warn]")
@@ -80,6 +103,9 @@ pub fn get_args() -> Result<Config> {
     let content_path = matches.value_of("content-path").unwrap().to_string();
     let write_to_stdout = matches.is_present("write-to-stdout");
     let log_level = matches.value_of("log-level").unwrap().to_string();
+    // TODO (tyslaton): Need to come up with a way for this to be extracted from the docker config to be more secure locally.
+    let username = matches.value_of("username").unwrap().to_string();
+    let password = matches.value_of("password").unwrap().to_string();
 
     if write_to_stdout {
         return Err(anyhow!(
@@ -93,6 +119,8 @@ pub fn get_args() -> Result<Config> {
         content_path,
         write_to_stdout,
         log_level,
+        username,
+        password,
     })
 }
 
@@ -132,7 +160,12 @@ pub async fn run(config: Config) -> Result<()> {
     };
 
     if let Some(docker) = &rt.docker {
-        let pull_opts = PullOpts::builder().image(repo).tag(tag).build();
+        let auth = RegistryAuth::builder()
+            .username(config.username)
+            .password(config.password)
+            .build();
+        let pull_opts = PullOpts::builder().image(repo).tag(tag).auth(auth).build();
+
         let images = docker.images();
         let mut stream = images.pull(&pull_opts);
 
@@ -147,8 +180,13 @@ pub async fn run(config: Config) -> Result<()> {
             }
         }
     } else {
+        let auth = PodmanRegistryAuth::builder()
+            .username(config.username)
+            .password(config.password)
+            .build();
         let pull_opts = PodmanPullOpts::builder()
             .reference(config.image.clone().trim())
+            .auth(auth)
             .build();
         let images = rt.podman.as_ref().unwrap().images();
         let mut stream = images.pull(&pull_opts);
