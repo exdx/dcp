@@ -53,7 +53,7 @@ pub fn get_args() -> Result<Config> {
             Arg::with_name("content-path")
                 .value_name("CONTENT-PATH")
                 .help("Where in the container filesystem the content to extract is")
-                .short("p")
+                .short("c")
                 .default_value("/")
                 .long("content-path"),
         )

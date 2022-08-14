@@ -58,15 +58,15 @@ By default, dcp will copy content to the current directory `.`. For example, let
 try issuing the following command:
 
 ```
-$ dcp tyslaton/sample-catalog:v0.0.4 -p configs
+$ dcp tyslaton/sample-catalog:v0.0.4 -c configs
 ```
 
-This command will copy the `configs` directory (specified via the `-p` flag) from the image to the current directory.
+This command will copy the `configs` directory (specified via the `c` flag) from the image to the current directory.
 
 For further configuration, lets try:
 
 ```
-$ dcp tyslaton/sample-catalog:v0.0.4 -d output -p configs
+$ dcp tyslaton/sample-catalog:v0.0.4 -d output -c configs
 ```
 
 This command pulls down the requested image, only extracting
@@ -76,7 +76,7 @@ locally (specified via the `-d` flag).
 Another example, for copying only the manifests directory:
 
 ```
-$ dcp quay.io/tflannag/bundles:resolveset-v0.0.2 -p manifests
+$ dcp quay.io/tflannag/bundles:resolveset-v0.0.2 -c manifests
 ```
 
 ## Testing
