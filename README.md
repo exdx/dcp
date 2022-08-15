@@ -1,6 +1,8 @@
 # dcp: docker cp made easy
 
-[![GitHub Actions](https://github.com/exdx/dcp/workflows/ci/badge.svg)](https://github.com/exdx/dcp/actions) [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE) 
+[![GitHub Actions](https://github.com/exdx/dcp/workflows/ci/badge.svg)](https://github.com/exdx/dcp/actions)
+[![Latest version](https://img.shields.io/crates/v/dcp.svg)](https://crates.io/crates/dcp)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 ## Summary
 
