@@ -31,6 +31,12 @@ not create any local files.
 
 ## Installing
 
+### Installing from crates.io
+
+If you're a Rust programmer and have Rust installed locally, you can install dcp
+by simply entering `cargo install dcp`, which will fetch the latest version from
+crates.io.
+
 ### Download compiled binary
 
 The [release section](https://github.com/exdx/dcp/releases) has a number
@@ -50,7 +56,7 @@ it easily.
 ## Implementation
 
 Because there wasn't a suitable `containerd` client implementation in Rust at the time
-of writing, `dcp` relies on APIs provided by an external crate. This limits `dcp` to working on systems where docker or podman is the container runtime.
+of writing, `dcp` relies on APIs provided by external docker and podman crates. This limits `dcp` to working on systems where docker or podman is the container runtime.
 
 By default, `dcp` will look for an active docker socket to connect to at the standard path. If the docker socket is unavailable, `dcp` will fallback to the current user's podman socket based on the $XDG_RUNTIME_DIR environment variable.
 
