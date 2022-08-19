@@ -1,7 +1,9 @@
 use anyhow::{anyhow, Result};
 use clap::{App, Arg};
 use docker_api::api::{ContainerCreateOpts, PullOpts, RegistryAuth, RmContainerOpts};
+use docker_api::Images;
 use futures_util::{StreamExt, TryStreamExt};
+use podman_api::api::Images as PodmanImages;
 use podman_api::opts::ContainerCreateOpts as PodmanContainerCreateOpts;
 use podman_api::opts::PullOpts as PodmanPullOpts;
 use podman_api::opts::RegistryAuth as PodmanRegistryAuth;
@@ -33,6 +35,8 @@ pub struct Config {
     username: String,
     // Password for signing into a private registry
     password: String,
+    // Force a pull even if the image is present locally
+    force_pull: bool,
 }
 
 pub fn get_args() -> Result<Config> {
@@ -96,12 +100,21 @@ pub fn get_args() -> Result<Config> {
                 .long("log-level")
                 .default_value("debug"),
         )
+        .arg(
+            Arg::with_name("force-pull")
+                .value_name("FORCE-PULL")
+                .help("Force a pull even if the image is present locally")
+                .takes_value(false)
+                .long("force-pull")
+                .short("f")
+        )
         .get_matches();
 
     let image = matches.value_of("image").unwrap().to_string();
     let download_path = matches.value_of("download-path").unwrap().to_string();
     let content_path = matches.value_of("content-path").unwrap().to_string();
     let write_to_stdout = matches.is_present("write-to-stdout");
+    let force_pull = matches.is_present("force-pull");
     let log_level = matches.value_of("log-level").unwrap().to_string();
     // TODO (tyslaton): Need to come up with a way for this to be extracted from the docker config to be more secure locally.
     let username = matches.value_of("username").unwrap().to_string();
@@ -121,6 +134,7 @@ pub fn get_args() -> Result<Config> {
         log_level,
         username,
         password,
+        force_pull,
     })
 }
 
@@ -166,18 +180,22 @@ pub async fn run(config: Config) -> Result<()> {
             .build();
         let pull_opts = PullOpts::builder().image(repo).tag(tag).auth(auth).build();
 
-        let images = docker.images();
-        let mut stream = images.pull(&pull_opts);
-
-        while let Some(pull_result) = stream.next().await {
-            match pull_result {
-                Ok(output) => {
-                    debug!("🔧 {:?}", output);
-                }
-                Err(e) => {
-                    error!("❌ pulling image {}", e);
+        let present_locally = image_present_locally_docker(docker.images(), image.image).await;
+        if config.force_pull || !present_locally {
+            let images = docker.images();
+            let mut stream = images.pull(&pull_opts);
+            while let Some(pull_result) = stream.next().await {
+                match pull_result {
+                    Ok(output) => {
+                        debug!("🔧 {:?}", output);
+                    }
+                    Err(e) => {
+                        return Err(anyhow!("❌ error pulling image: {}", e));
+                    }
                 }
             }
+        } else {
+            debug!("✅ Skipping the pull process as the image was found locally");
         }
     } else {
         let auth = PodmanRegistryAuth::builder()
@@ -188,18 +206,24 @@ pub async fn run(config: Config) -> Result<()> {
             .reference(config.image.clone().trim())
             .auth(auth)
             .build();
-        let images = rt.podman.as_ref().unwrap().images();
-        let mut stream = images.pull(&pull_opts);
 
-        while let Some(pull_result) = stream.next().await {
-            match pull_result {
-                Ok(output) => {
-                    debug!("🔧 {:?}", output);
-                }
-                Err(e) => {
-                    error!("❌ pulling image: {}", e);
+        let present_locally =
+            image_present_locally_podman(rt.podman.as_ref().unwrap().images(), image.image).await;
+        if config.force_pull || !present_locally {
+            let images = rt.podman.as_ref().unwrap().images();
+            let mut stream = images.pull(&pull_opts);
+            while let Some(pull_result) = stream.next().await {
+                match pull_result {
+                    Ok(output) => {
+                        debug!("🔧 {:?}", output);
+                    }
+                    Err(e) => {
+                        return Err(anyhow!("❌ error pulling image: {}", e));
+                    }
                 }
             }
+        } else {
+            debug!("✅ Skipping the pull process as the image was found locally");
         }
     }
 
@@ -270,7 +294,7 @@ pub async fn run(config: Config) -> Result<()> {
     if let Some(docker) = &rt.docker {
         let delete_opts = RmContainerOpts::builder().force(true).build();
         if let Err(e) = docker.containers().get(&*id).remove(&delete_opts).await {
-            error!("❌ cleaning up container {}", e);
+            error!("❌ error cleaning up container {}", e);
             Ok(())
         } else {
             debug!("📦 Cleaned up container {:?} successfully", id);
@@ -295,4 +319,42 @@ pub async fn run(config: Config) -> Result<()> {
             }
         }
     }
+}
+
+// TODO (tyslaton): Refactor image_present_locally functions to be a single function
+pub async fn image_present_locally_docker(images: Images, search_for_image: String) -> bool {
+    match images.list(&Default::default()).await {
+        Ok(images) => {
+            for image in images {
+                for repo_tag in image.repo_tags {
+                    for tag in repo_tag {
+                        print!("{} | {}", tag, search_for_image);
+                        if tag == search_for_image {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        Err(e) => error!("❌ error occurred while searching for image locally! {}", e),
+    }
+    return false;
+}
+
+pub async fn image_present_locally_podman(images: PodmanImages, search_for_image: String) -> bool {
+    match images.list(&Default::default()).await {
+        Ok(images) => {
+            for image in images {
+                for repo_tag in image.repo_tags {
+                    for tag in repo_tag {
+                        if tag == search_for_image {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        Err(e) => error!("❌ error occurred while searching for image locally! {}", e),
+    }
+    return false;
 }
