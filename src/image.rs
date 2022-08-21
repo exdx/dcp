@@ -34,12 +34,14 @@ impl Image {
 // TODO (tyslaton): Refactor image_present_locally functions to be a single function
 // TODO: Refactor to pass image name as an option to list, instead of listing all images, if possible.
 pub async fn is_present_locally_docker(images: Images, search_for_image: String) -> bool {
+    debug!("📦 Searching for image {} locally", search_for_image);
     match images.list(&Default::default()).await {
         Ok(images) => {
             for image in images {
                 if let Some(repo_tag) = image.repo_tags {
                     for tag in repo_tag {
                         if tag == search_for_image {
+                            debug!("📦 Found image {} locally", search_for_image);
                             return true;
                         }
                     }
@@ -52,12 +54,14 @@ pub async fn is_present_locally_docker(images: Images, search_for_image: String)
 }
 
 pub async fn is_present_locally_podman(images: PodmanImages, search_for_image: String) -> bool {
+    debug!("📦 Searching for image {} locally", search_for_image);
     match images.list(&Default::default()).await {
         Ok(images) => {
             for image in images {
                 if let Some(repo_tag) = image.repo_tags {
                     for tag in repo_tag {
                         if tag == search_for_image {
+                            debug!("📦 Found image {} locally", search_for_image);
                             return true;
                         }
                     }
