@@ -29,6 +29,8 @@ say `dcp <image-name>` and it can extract the contents of that image onto the
 local filesystem. It can also just print the contents of the image to stdout, and
 not create any local files.
 
+![Demo](demo.gif)
+
 ## Installing
 
 ### Installing from crates.io
