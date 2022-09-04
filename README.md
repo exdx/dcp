@@ -102,6 +102,23 @@ your shell's history. If you would like to remain completely secure then
 login via `<container_runtime> login` and pull the image locally. `dcp` 
 will then be able to notice the image locally pulled and process it.
 
+## FAQ
+
+**Q**: I hit an unexpected error unpacking the root filesystem of an image: `trying to unpack outside of destination path`. How can I avoid this?
+
+**A**: dcp relies on the underlying `tar` library in rust to unpack the image filesystem represented as a tar file. The [unpack](https://docs.rs/tar/latest/tar/struct.Archive.html#method.unpack) command is senstive in that it will not write files outside of the path specified by the destination. So things like symlinks will cause errors when unpacking. Whenever possible, use the `-c` flag to specify a directory to unpack, instead of the filesystem root, to avoid this error. 
+
+------------------
+**Q**: I would like to use dcp to pull content from an image but I don't know where in the image the content is stored. Is there an `ls` command or similar functionality in dcp? 
+
+**A**: Checkout the excellent [dive tool](https://github.com/wagoodman/dive) to easily explore a container filesystem by layer. After finding the path of the files to copy, you can then use dcp to extract just those specific files. 
+
+------------------
+**Q**: Is dcp supported on Windows?
+
+**A**: Windows support is being tracked in [#14](https://github.com/exdx/dcp/issues/14). We are looking for someone with access to a Windows machine to help work on Windows support. Outside of changing the socket paths, there may not be any other work required to support Windows.
+
+
 ## Testing
 
 If you would like to run the test suite, you just need to run the standard cargo command. This will run all relevant
