@@ -7,7 +7,12 @@ pub struct Image {
 
 impl Image {
     pub fn split(&self) -> Option<(String, String)> {
-        let image_split: Vec<&str> = self.image.split(':').collect();
+        let image_split: Vec<&str> = if self.image.contains('@') {
+            self.image.split('@').collect()
+        } else {
+            self.image.split(':').collect()
+        };
+
         if image_split.is_empty() {
             return None;
         }
@@ -71,4 +76,24 @@ pub async fn is_present_locally_podman(images: PodmanImages, search_for_image: S
         Err(e) => error!("❌ error occurred while searching for image locally: {}", e),
     }
     false
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Image;
+
+    #[test]
+    fn test_split() {
+        let digest_image = "quay.io/tflannag/bundles@sha256:145ccb5e7e73d4ae914160c066e49f35bc2be2bb86e4ab0002a802aa436599bf";
+        let image = Image {
+            image: digest_image.to_string(),
+        };
+
+        let (out_repo, out_tag) = image.split().unwrap();
+        assert_eq!(out_repo, "quay.io/tflannag/bundles".to_string());
+        assert_eq!(
+            out_tag,
+            "sha256:145ccb5e7e73d4ae914160c066e49f35bc2be2bb86e4ab0002a802aa436599bf".to_string()
+        );
+    }
 }
