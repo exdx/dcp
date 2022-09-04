@@ -3,15 +3,15 @@ use docker_api::Docker;
 use podman_api::Podman;
 use xdg::BaseDirectories;
 
-const DOCKER_SOCKET: &str = "unix:///var/run/docker.sock";
-
 pub struct Runtime {
     pub docker: Option<docker_api::Docker>,
     pub podman: Option<podman_api::Podman>,
 }
 
-pub async fn set() -> Option<Runtime> {
-    match Docker::new(DOCKER_SOCKET) {
+pub const DEFAULT_SOCKET: &str = "unix:///var/run/docker.sock";
+
+pub async fn set(socket: &str) -> Option<Runtime> {
+    match Docker::new(socket) {
         Ok(docker) => {
             // Use version() as a proxy for socket connection status
             match docker.version().await {
@@ -22,8 +22,8 @@ pub async fn set() -> Option<Runtime> {
                 Err(_) => {
                     // Fallback to podman config
                     debug!("🔧 docker socket not found: falling back to podman configuration");
-                    let socket = get_podman_socket().ok()?;
-                    match Podman::new(socket) {
+                    let podman_socket = get_podman_socket(socket).ok()?;
+                    match Podman::new(podman_socket) {
                         // Use version() as a proxy for socket connection status
                         Ok(podman) => match podman.version().await {
                             Ok(_) => {
@@ -52,18 +52,23 @@ pub async fn set() -> Option<Runtime> {
     }
 }
 
-fn get_podman_socket() -> Result<String> {
-    let base_dirs = BaseDirectories::new()?;
-    if !base_dirs.has_runtime_directory() {
-        return Err(anyhow!("could not find xdg runtime directory"));
+fn get_podman_socket(socket: &str) -> Result<String> {
+    let mut podman_socket = String::from(socket);
+
+    // If a custom socket has not be set, find the logical default
+    if socket == DEFAULT_SOCKET {
+        let base_dirs = BaseDirectories::new()?;
+        if !base_dirs.has_runtime_directory() {
+            return Err(anyhow!("could not find xdg runtime directory"));
+        }
+        let runtime_dir = base_dirs.get_runtime_directory()?;
+        podman_socket = format!(
+            "{}{}{}",
+            "unix://",
+            runtime_dir.as_path().to_str().unwrap(),
+            "/podman/podman.sock"
+        );
     }
-    let runtime_dir = base_dirs.get_runtime_directory()?;
-    let podman_socket = format!(
-        "{}{}{}",
-        "unix://",
-        runtime_dir.as_path().to_str().unwrap(),
-        "/podman/podman.sock"
-    );
 
     debug!("🔧 podman socket at {}", podman_socket);
 
