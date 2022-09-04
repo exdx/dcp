@@ -14,7 +14,7 @@ For example, [operator-framework bundles](https://olm.operatorframework.io/docs/
 container images to store Kubernetes manifests. These manifests are unpacked on-cluster and made available to end users.
 
 One of the downsides of using container images to store data is that they are
-necessarily opaque. There's no way to quickly tell what's inside the image, although
+opaque. There's no way to quickly tell what's inside the image, although
 the hash digest is useful in seeing whether the image has changed from a previous
 version. The options are to use `docker cp` or something similar using podman
 or containerd.
@@ -24,7 +24,7 @@ somewhere in a registry. You have to pull the image, create a container from tha
 image, and only then run `docker cp <container-id>` using an unintuitive syntax for selecting
 what should be copied to the local filesystem.
 
-`dcp` is a simple binary that attempts to simplify this workflow. A user can simply
+dcp is a simple binary that attempts to simplify this workflow. A user can simply
 say `dcp <image-name>` and it can extract the contents of that image onto the
 local filesystem. It can also just print the contents of the image to stdout, and
 not create any local files.
@@ -58,9 +58,9 @@ it easily.
 ## Implementation
 
 Because there wasn't a suitable `containerd` client implementation in Rust at the time
-of writing, `dcp` relies on APIs provided by external docker and podman crates. This limits `dcp` to working on systems where docker or podman is the container runtime.
+of writing, dcp relies on APIs provided by external docker and podman crates. This limits dcp to working on systems where docker or podman is the container runtime.
 
-By default, `dcp` will look for an active docker socket to connect to at the standard path. If the docker socket is unavailable, `dcp` will fallback to the current user's podman socket based on the $XDG_RUNTIME_DIR environment variable.
+By default, dcp will look for an active docker socket to connect to at the standard path. If the docker socket is unavailable, dcp will fallback to the current user's podman socket based on the $XDG_RUNTIME_DIR environment variable.
 
 ## Flags and Examples
 
@@ -71,7 +71,7 @@ try issuing the following command:
 $ dcp tyslaton/sample-catalog:v0.0.4 -c configs
 ```
 
-This command will copy the `configs` directory (specified via the `c` flag) from the image to the current directory.
+This command will copy the `configs` directory (specified via the `-c` flag) from the image to the current directory.
 
 For further configuration, lets try:
 
@@ -99,14 +99,14 @@ $ dcp quay.io/tyslaton/sample-catalog-private:latest -u <username> -p <password>
 **Note**: This serves as a convenient way to connect to private 
 registries but is insecure locally as your credentials are saved in
 your shell's history. If you would like to remain completely secure then
-login via `<container_runtime> login` and pull the image locally. `dcp` 
+login via `<container_runtime> login` and pull the image locally. dcp 
 will then be able to notice the image locally pulled and process it.
 
 ## FAQ
 
 **Q**: I hit an unexpected error unpacking the root filesystem of an image: `trying to unpack outside of destination path`. How can I avoid this?
 
-**A**: dcp relies on the underlying `tar` library in rust to unpack the image filesystem represented as a tar file. The [unpack](https://docs.rs/tar/latest/tar/struct.Archive.html#method.unpack) command is senstive in that it will not write files outside of the path specified by the destination. So things like symlinks will cause errors when unpacking. Whenever possible, use the `-c` flag to specify a directory to unpack, instead of the filesystem root, to avoid this error. 
+**A**: dcp relies on the underlying `tar` Rust library to unpack the image filesystem represented as a tar file. The [unpack](https://docs.rs/tar/latest/tar/struct.Archive.html#method.unpack) command is senstive in that it will not write files outside of the path specified by the destination. So things like symlinks will cause errors when unpacking. Whenever possible, use the `-c` flag to specify a directory to unpack, instead of the filesystem root, to avoid this error. 
 
 ------------------
 **Q**: I would like to use dcp to pull content from an image but I don't know where in the image the content is stored. Is there an `ls` command or similar functionality in dcp? 
