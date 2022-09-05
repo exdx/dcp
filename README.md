@@ -119,9 +119,9 @@ will then be able to notice the image locally pulled and process it.
 **A**: Windows support is being tracked in [#14](https://github.com/exdx/dcp/issues/14). Outside of changing the socket paths, there may not be any other work required to support Windows.
 
 ------------------
-**Q**: I would like to inspect an image's labels to figure out where in the filesystem I should copy from. Does dcp have an `inspect` command to list an images labels?
+**Q**: I would like to inspect image labels to figure out where in the filesystem I should copy from. Does dcp have an `inspect` command to list image labels?
 
-**A**: Listing an image's labels can be done easily using the underlying container runtime. For example, `docker image inspect <image-id> | grep Labels` is an easy command to run to see labels attached to an image. From there, dcp can be used to copy files from the container filesystem. 
+**A**: Listing an image's labels can be done easily using the underlying container runtime. For example, run `docker image inspect <image-id> | grep Labels` to see labels attached to an image. From there, dcp can be used to copy files from the container filesystem. 
 
 
 ## Testing
