@@ -1,6 +1,6 @@
 [package]
 name = "dcp"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2021"
 license = "MIT"
 description = "A utility tool to copy container filesystems easily"

@@ -15,7 +15,7 @@ extern crate pretty_env_logger;
 #[macro_use]
 extern crate log;
 
-pub const VERSION: &str = "0.3.1";
+pub const VERSION: &str = "0.3.2";
 
 #[derive(Debug)]
 pub struct Config {
