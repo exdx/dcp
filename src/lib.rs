@@ -35,6 +35,8 @@ pub struct Config {
     password: String,
     // Force a pull even if the image is present locally
     force_pull: bool,
+    // Specify a custom socket to utilize for the runtime
+    socket: String,
 }
 
 pub fn get_args() -> Result<Config> {
@@ -106,6 +108,14 @@ pub fn get_args() -> Result<Config> {
                 .long("force-pull")
                 .short("f")
         )
+        .arg(
+            Arg::with_name("socket")
+                .value_name("SOCKET")
+                .help("Specify a custom socket to utilize for the runtime")
+                .long("socket")
+                .short("s")
+                .default_value(runtime::DEFAULT_SOCKET)
+        )
         .get_matches();
 
     let image = matches.value_of("image").unwrap().to_string();
@@ -114,6 +124,7 @@ pub fn get_args() -> Result<Config> {
     let write_to_stdout = matches.is_present("write-to-stdout");
     let force_pull = matches.is_present("force-pull");
     let log_level = matches.value_of("log-level").unwrap().to_string();
+    let socket = matches.value_of("socket").unwrap().to_string();
     // TODO (tyslaton): Need to come up with a way for this to be extracted from the docker config to be more secure locally.
     let username = matches.value_of("username").unwrap().to_string();
     let password = matches.value_of("password").unwrap().to_string();
@@ -133,6 +144,7 @@ pub fn get_args() -> Result<Config> {
         username,
         password,
         force_pull,
+        socket,
     })
 }
 
@@ -165,7 +177,7 @@ pub async fn run(config: Config) -> Result<()> {
         }
     }
 
-    let rt = if let Some(runtime) = runtime::set().await {
+    let rt = if let Some(runtime) = runtime::set(&config.socket).await {
         runtime
     } else {
         return Err(anyhow!("no valid container runtime"));
