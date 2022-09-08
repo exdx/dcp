@@ -1,14 +1,27 @@
-use anyhow::{anyhow, Result};
 use docker_api::Docker;
+
+// Imports not used by windows environments
+#[cfg(not(target_os = "windows"))]
+use anyhow::anyhow;
+#[cfg(not(target_os = "windows"))]
+use anyhow::Result;
+#[cfg(not(target_os = "windows"))]
 use podman_api::Podman;
+
+// Imports that cannot be used in windows environments
+#[cfg(not(target_os = "windows"))]
 use xdg::BaseDirectories;
+
+// Set logical socket default per environment
+#[cfg(not(target_os = "windows"))]
+pub const DEFAULT_SOCKET: &str = "unix:///var/run/docker.sock";
+#[cfg(target_os = "windows")]
+pub const DEFAULT_SOCKET: &str = "tcp://localhost:2375";
 
 pub struct Runtime {
     pub docker: Option<docker_api::Docker>,
     pub podman: Option<podman_api::Podman>,
 }
-
-pub const DEFAULT_SOCKET: &str = "unix:///var/run/docker.sock";
 
 pub async fn set(socket: &str) -> Option<Runtime> {
     match Docker::new(socket) {
@@ -19,6 +32,7 @@ pub async fn set(socket: &str) -> Option<Runtime> {
                     docker: Some(docker),
                     podman: None,
                 }),
+                #[cfg(not(target_os = "windows"))]
                 Err(_) => {
                     // Fallback to podman config
                     debug!("🔧 docker socket not found: falling back to podman configuration");
@@ -32,30 +46,39 @@ pub async fn set(socket: &str) -> Option<Runtime> {
                                     podman: Some(podman),
                                 })
                             }
-                            Err(_) => {
-                                error!("❌ neither docker or podman sockets were found running on this host");
+                            Err(err) => {
+                                error!("❌ neither docker or podman sockets were found running at {} on this host: {}", socket, err);
                                 return None;
                             }
                         },
-                        Err(_) => {
-                            error!("❌ unable to create a podman client on the host");
+                        Err(err) => {
+                            error!("❌ unable to create a podman client on the host: {}", err);
                             return None;
                         }
                     }
                 }
+                #[cfg(target_os = "windows")]
+                Err(err) => {
+                    error!(
+                        "❌ docker socket was not found running at {} on this host: {}",
+                        socket, err
+                    );
+                    return None;
+                }
             }
         }
-        Err(_) => {
-            error!("❌ unable to create a docker client on the host");
+        Err(err) => {
+            error!("❌ unable to create a docker client on the host: {}", err);
             return None;
         }
     }
 }
 
+#[cfg(not(target_os = "windows"))]
 fn get_podman_socket(socket: &str) -> Result<String> {
     let mut podman_socket = String::from(socket);
 
-    // If a custom socket has not be set, find the logical default
+    // If a custom socket has not been set, find the logical default
     if socket == DEFAULT_SOCKET {
         let base_dirs = BaseDirectories::new()?;
         if !base_dirs.has_runtime_directory() {
