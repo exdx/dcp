@@ -62,6 +62,8 @@ of writing, dcp relies on APIs provided by external docker and podman crates. Th
 
 By default, dcp will look for an active docker socket to connect to at the standard path. If the docker socket is unavailable, dcp will fallback to the current user's podman socket based on the $XDG_RUNTIME_DIR environment variable.
 
+If the docker socket is on a remote host, or in a custom location, use the `-s` flag with the path to the custom socket.
+
 ## Flags and Examples
 
 By default, dcp will copy content to the current directory `.`. For example, lets

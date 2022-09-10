@@ -40,20 +40,18 @@ pub async fn set(socket: &str) -> Option<Runtime> {
                     match Podman::new(podman_socket) {
                         // Use version() as a proxy for socket connection status
                         Ok(podman) => match podman.version().await {
-                            Ok(_) => {
-                                return Some(Runtime {
-                                    docker: None,
-                                    podman: Some(podman),
-                                })
-                            }
+                            Ok(_) => Some(Runtime {
+                                docker: None,
+                                podman: Some(podman),
+                            }),
                             Err(err) => {
                                 error!("❌ neither docker or podman sockets were found running at {} on this host: {}", socket, err);
-                                return None;
+                                None
                             }
                         },
                         Err(err) => {
                             error!("❌ unable to create a podman client on the host: {}", err);
-                            return None;
+                            None
                         }
                     }
                 }
@@ -69,7 +67,7 @@ pub async fn set(socket: &str) -> Option<Runtime> {
         }
         Err(err) => {
             error!("❌ unable to create a docker client on the host: {}", err);
-            return None;
+            None
         }
     }
 }
