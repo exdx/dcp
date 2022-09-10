@@ -18,6 +18,10 @@ jobs:
       - name: Lint
         run: cargo fmt && git diff --exit-code
 
+      - uses: actions/checkout@v3
+      - name: Clippy
+        run: cargo clippy --no-deps
+
   build:
     needs: lint
     runs-on: ubuntu-latest
