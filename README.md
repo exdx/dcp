@@ -118,7 +118,17 @@ will then be able to notice the image locally pulled and process it.
 ------------------
 **Q**: Is dcp supported on Windows?
 
-**A**: Yes, dcp  is supported on Windows. Windows support is experimental, as there is no CI coverage, but it should work with the default Docker Desktop. 
+**A**: Yes, dcp  is supported on Windows. Windows support is experimental, as there is no CI coverage, but it will likely work in your windows environment. The only non-default change you need to make is to expose the docker daemon so that dcp can connect to it. This can be done through one of two ways:
+
+1. Adding the following to your `%userprofile%\.docker\daemon.json` file.
+    ```json
+    {
+        "hosts": ["tcp://0.0.0.0:2375"]
+    }
+    ```
+
+2. Going through the Docker Desktop UI and enabling the setting for `Expose daemon on tcp://localhost:2375 without TLS` under `General`.
+
 
 ------------------
 **Q**: I would like to inspect image labels to figure out where in the filesystem I should copy from. Does dcp have an `inspect` command to list image labels?
