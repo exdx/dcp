@@ -2,9 +2,9 @@ name: ci
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   CARGO_TERM_COLOR: always
@@ -55,4 +55,14 @@ jobs:
           systemctl --user enable --now podman.socket
           cargo test --verbose
 
+  e2e-windows:
+    needs: build
+    runs-on: windows-latest
 
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run e2e tests with docker tests
+        run: |
+          echo "docker info"
+          docker info
+          cargo test --verbose
