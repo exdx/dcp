@@ -1,12 +1,5 @@
 use anyhow::{anyhow, Result};
 use clap::{App, Arg};
-use docker_api::api::{ContainerCreateOpts, PullOpts, RegistryAuth, RmContainerOpts};
-use futures_util::{StreamExt, TryStreamExt};
-use podman_api::opts::ContainerCreateOpts as PodmanContainerCreateOpts;
-use podman_api::opts::PullOpts as PodmanPullOpts;
-use podman_api::opts::RegistryAuth as PodmanRegistryAuth;
-use std::path::PathBuf;
-use tar::Archive;
 
 mod image;
 mod runtime;
@@ -131,7 +124,7 @@ pub fn get_args() -> Result<Config> {
 
     if write_to_stdout {
         return Err(anyhow!(
-            "error: writing to stdout is not currently implemented"
+            "❌ error: writing to stdout is not currently implemented"
         ));
     };
 
@@ -159,175 +152,46 @@ pub async fn run(config: Config) -> Result<()> {
         .parse_filters(&config.log_level.clone())
         .init();
 
-    let image = image::Image {
-        image: config.image.clone(),
-    };
-
-    let repo: String;
-    let tag: String;
-    match image.split() {
-        Some(image) => {
-            repo = image.0;
-            tag = image.1;
-        }
-        None => {
-            return Err(anyhow!(
-                "could not split provided image into repository and tag"
-            ))
-        }
-    }
-
+    // Build the runtime
     let rt = if let Some(runtime) = runtime::set(&config.socket).await {
         runtime
     } else {
-        return Err(anyhow!("no valid container runtime"));
+        return Err(anyhow!("❌ no valid container runtime"));
     };
 
-    if let Some(docker) = &rt.docker {
-        let auth = RegistryAuth::builder()
-            .username(config.username)
-            .password(config.password)
-            .build();
-        let pull_opts = PullOpts::builder().image(repo).tag(tag).auth(auth).build();
-
-        let present_locally = image::is_present_locally_docker(docker.images(), image.image).await;
-        if config.force_pull || !present_locally {
-            let images = docker.images();
-            let mut stream = images.pull(&pull_opts);
-            while let Some(pull_result) = stream.next().await {
-                match pull_result {
-                    Ok(output) => {
-                        debug!("🔧 {:?}", output);
-                    }
-                    Err(e) => {
-                        return Err(anyhow!("❌ error pulling image: {}", e));
-                    }
-                }
-            }
-        } else {
-            debug!("✅ Skipping the pull process as the image was found locally");
+    // Build the image struct
+    let image = match image::new(config.image, rt) {
+        Ok(i) => i,
+        Err(e) => {
+            return Err(anyhow!("❌ error building the image: {}", e));
         }
-    } else {
-        let auth = PodmanRegistryAuth::builder()
-            .username(config.username)
-            .password(config.password)
-            .build();
-        let pull_opts = PodmanPullOpts::builder()
-            .reference(config.image.clone().trim())
-            .auth(auth)
-            .build();
+    };
 
-        let present_locally =
-            image::is_present_locally_podman(rt.podman.as_ref().unwrap().images(), image.image)
-                .await;
-        if config.force_pull || !present_locally {
-            let images = rt.podman.as_ref().unwrap().images();
-            let mut stream = images.pull(&pull_opts);
-            while let Some(pull_result) = stream.next().await {
-                match pull_result {
-                    Ok(output) => {
-                        debug!("🔧 {:?}", output);
-                    }
-                    Err(e) => {
-                        return Err(anyhow!("❌ error pulling image: {}", e));
-                    }
-                }
-            }
-        } else {
-            debug!("✅ Skipping the pull process as the image was found locally");
+    // Pull the image
+    match image
+        .pull(config.username, config.password, config.force_pull)
+        .await
+    {
+        Ok(_) => {}
+        Err(e) => {
+            return Err(anyhow!("❌ error building the image: {}", e));
         }
     }
 
-    // note(tflannag): Use a "dummy" command "FROM SCRATCH" container images.
-    let cmd = vec![""];
-    let id;
-    if let Some(docker) = &rt.docker {
-        let create_opts = ContainerCreateOpts::builder(config.image.clone())
-            .cmd(&cmd)
-            .build();
-        let container = docker.containers().create(&create_opts).await?;
-        id = container.id().to_string();
-        debug!("📦 Created container with id: {:?}", id);
-    } else {
-        let create_opts = PodmanContainerCreateOpts::builder()
-            .image(config.image.clone().trim())
-            .command(&cmd)
-            .build();
-        let container = rt
-            .podman
-            .as_ref()
-            .unwrap()
-            .containers()
-            .create(&create_opts)
-            .await?;
-        id = container.id;
-        debug!("📦 Created container with id: {:?}", id);
-    }
-
-    let mut content_path = PathBuf::new();
-    content_path.push(&config.content_path);
-
-    let mut download_path = PathBuf::new();
-    download_path.push(&config.download_path);
-
-    let bytes;
-    if let Some(docker) = &rt.docker {
-        bytes = docker
-            .containers()
-            .get(&*id)
-            .copy_from(&content_path)
-            .try_concat()
-            .await?;
-    } else {
-        bytes = rt
-            .podman
-            .as_ref()
-            .unwrap()
-            .containers()
-            .get(&*id)
-            .copy_from(&content_path)
-            .try_concat()
-            .await?;
-    }
-
-    let mut archive = Archive::new(&bytes[..]);
-    if config.write_to_stdout {
-        unimplemented!()
-    } else {
-        archive.unpack(&download_path)?;
-    }
-
-    info!(
-        "✅ Copied content to {} successfully",
-        download_path.display()
-    );
-
-    if let Some(docker) = &rt.docker {
-        let delete_opts = RmContainerOpts::builder().force(true).build();
-        if let Err(e) = docker.containers().get(&*id).remove(&delete_opts).await {
-            error!("❌ error cleaning up container {}", e);
-            Ok(())
-        } else {
-            debug!("📦 Cleaned up container {:?} successfully", id);
-            Ok(())
-        }
-    } else {
-        match rt
-            .podman
-            .as_ref()
-            .unwrap()
-            .containers()
-            .prune(&Default::default())
-            .await
-        {
-            Ok(_) => {
-                debug!("📦 Cleaned up container {:?} successfully", id);
-                Ok(())
-            }
-            Err(e) => {
-                eprintln!("{}", e);
-                Ok(())
-            }
+    // Copy files from the image
+    match image
+        .copy_files(
+            config.content_path,
+            config.download_path,
+            config.write_to_stdout,
+        )
+        .await
+    {
+        Ok(_) => {}
+        Err(e) => {
+            return Err(anyhow!("❌ error copying the image's files: {}", e));
         }
     }
+
+    Ok(())
 }
