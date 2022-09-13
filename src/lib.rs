@@ -1,7 +1,9 @@
 use anyhow::{anyhow, Result};
 use clap::{App, Arg};
 
+mod docker;
 mod image;
+mod podman;
 mod runtime;
 
 extern crate pretty_env_logger;
