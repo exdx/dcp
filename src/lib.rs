@@ -1,9 +1,6 @@
 use anyhow::{anyhow, Result};
 use clap::{App, Arg};
 
-mod docker;
-mod image;
-mod podman;
 mod runtime;
 
 extern crate pretty_env_logger;
@@ -162,7 +159,7 @@ pub async fn run(config: Config) -> Result<()> {
     };
 
     // Build the image struct
-    let image = match image::new(config.image, rt) {
+    let container = match runtime::container::new(config.image, rt) {
         Ok(i) => i,
         Err(e) => {
             return Err(anyhow!("❌ error building the image: {}", e));
@@ -170,7 +167,7 @@ pub async fn run(config: Config) -> Result<()> {
     };
 
     // Pull the image
-    match image
+    match container
         .pull(config.username, config.password, config.force_pull)
         .await
     {
@@ -181,7 +178,7 @@ pub async fn run(config: Config) -> Result<()> {
     }
 
     // Copy files from the image
-    match image
+    match container
         .copy_files(
             config.content_path,
             config.download_path,
