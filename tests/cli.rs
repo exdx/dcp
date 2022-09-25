@@ -1,5 +1,5 @@
 use assert_cmd::Command;
-use dcp::VERSION;
+use dcp::config::VERSION;
 use predicates::prelude::*;
 use rand::{thread_rng, Rng};
 use std::error::Error;

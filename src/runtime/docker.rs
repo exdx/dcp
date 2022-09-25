@@ -146,6 +146,7 @@ impl Container for Image {
         Ok(())
     }
 
+    // present_locally determines if this container's image is pulled locally
     async fn present_locally(&self) -> bool {
         debug!("📦 Searching for image {} locally", self.image);
         match self.runtime.images().list(&Default::default()).await {

@@ -6,7 +6,7 @@ extern crate log;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    match dcp::get_args() {
+    match dcp::config::get_args() {
         Err(e) => {
             error!("❌ error reading arguments {}", e);
             std::process::exit(1)
