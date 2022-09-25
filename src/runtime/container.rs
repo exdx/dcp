@@ -1,12 +1,24 @@
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 
-use super::docker::DockerImage;
-use super::podman::PodmanImage;
-use super::runtime;
+use super::docker::Image as DockerImage;
+use super::podman::Image as PodmanImage;
+use super::Runtime;
 
+/// Container is a trait that defines the functionality of a container
+/// to be used by dcp. It contains various methods that are required for
+/// the process of copying files out of a container but leaves the physical
+/// actions of accomplishing this to the implementation.
+///
+/// # Functions
+///
+/// * `pull` - Pulls the container's image. Accepts authentication and can ignore local images if `force` is set.
+/// * `start` - Starts the container and returns the started container's ID if successful.
+/// * `stop` - Stops the container.
+/// * `copy_files` - Copies the files from the specified locations to the specified destination locally.
+/// * `present_locally` - Checks to see if the image is already pulled locally.
 #[async_trait]
-pub trait Image {
+pub trait Container {
     async fn pull(&self, username: String, password: String, force: bool) -> Result<()>;
     async fn start(&self) -> Result<String>;
     async fn stop(&self, id: String) -> Result<()>;
@@ -16,11 +28,16 @@ pub trait Image {
         download_path: String,
         write_to_stdout: bool,
     ) -> Result<()>;
-    async fn is_present_locally(&self) -> bool;
+    async fn present_locally(&self) -> bool;
 }
 
-// new creates a new image struct based on the image and runtime provided.
-pub fn new(image: String, runtime: runtime::Runtime) -> Result<Box<dyn Image>> {
+/// Returns a container with the provided image and runtime
+///
+/// # Arguments
+///
+/// * `image` - String representation of an image
+/// * `runtime` - Runtime object from representing what this container will run on
+pub fn new(image: String, runtime: Runtime) -> Result<Box<dyn Container>> {
     let repo: String;
     let tag: String;
     match split(image.clone()) {

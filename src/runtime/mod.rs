@@ -1,3 +1,8 @@
+mod docker;
+mod podman;
+
+pub mod container;
+
 use docker_api::Docker;
 
 // Imports not used by windows environments
