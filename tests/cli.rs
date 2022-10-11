@@ -6,7 +6,7 @@ use std::error::Error;
 use std::fs::remove_dir_all;
 
 const PRG: &str = "dcp";
-const TEST_CONTENT_DIR: &str = "./test_runs";
+const TEST_CONTENT_DIR: &str = "./target/tmp/test_runs";
 const DEFAULT_IMAGE: &str = "quay.io/tyslaton/sample-catalog:v0.0.4";
 const IMAGE_NO_TAG: &str = "quay.io/tyslaton/sample-catalog";
 const SCRATCH_BASE_IMAGE: &str = "quay.io/tflannag/bundles:resolveset-v0.0.2";
