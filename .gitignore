@@ -2,8 +2,6 @@
 
 .idea
 
-test_runs/
-
 .DS_Store
 
 release.sh
