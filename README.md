@@ -24,10 +24,9 @@ somewhere in a registry. You have to pull the image, create a container from tha
 image, and only then run `docker cp <container-id>` using an unintuitive syntax for selecting
 what should be copied to the local filesystem.
 
-dcp is a simple binary that attempts to simplify this workflow. A user can simply
-say `dcp <image-name>` and it can extract the contents of that image onto the
-local filesystem. It can also just print the contents of the image to stdout, and
-not create any local files.
+dcp is a simple binary that simplifies this workflow. A user can simply
+say `dcp <image-name>` and dcp can extract the contents of that image onto the
+local filesystem. From there, users are free to view and edit the files locally. Any OCI-based image is supported. 
 
 ![Demo](demo.gif)
 
@@ -38,6 +37,7 @@ not create any local files.
 If you're a Rust programmer and have Rust installed locally, you can install dcp
 by simply entering `cargo install dcp`, which will fetch the latest version from
 crates.io.
+dcp relies on the stable Rust toolchain. 
 
 ### Download compiled binary
 
@@ -66,8 +66,7 @@ If the docker socket is on a remote host, or in a custom location, use the `-s` 
 
 ## Flags and Examples
 
-By default, dcp will copy content to the current directory `.`. For example, lets
-try issuing the following command:
+By default, dcp will copy content to the current working directory. For example, lets try issuing the following command:
 
 ```
 $ dcp tyslaton/sample-catalog:v0.0.4 -c configs
@@ -83,7 +82,8 @@ $ dcp tyslaton/sample-catalog:v0.0.4 -d output -c configs
 
 This command pulls down the requested image, only extracting
 the `configs` directory and copying it to the `output` directory
-locally (specified via the `-d` flag).
+locally (specified via the `-d` flag). If `output` does not exist locally,
+it will be created as part of the process. 
 
 Another example, for copying only the manifests directory:
 
@@ -101,8 +101,8 @@ $ dcp quay.io/tyslaton/sample-catalog-private:latest -u <username> -p <password>
 **Note**: This serves as a convenient way to connect to private 
 registries but is insecure locally as your credentials are saved in
 your shell's history. If you would like to remain completely secure then
-login via `<container_runtime> login` and pull the image locally. dcp 
-will then be able to notice the image locally pulled and process it.
+login via `<container_runtime> login` and pull the image. dcp 
+will then be able to find the image locally and process it.
 
 ## FAQ
 
