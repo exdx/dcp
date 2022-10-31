@@ -3,7 +3,7 @@ use clap::{App, Arg};
 
 use crate::runtime;
 
-pub const VERSION: &str = "0.4.0";
+pub const VERSION: &str = "0.4.1";
 
 #[derive(Debug)]
 pub struct Config {
