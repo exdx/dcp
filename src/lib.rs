@@ -18,6 +18,21 @@ pub async fn run(cfg: config::Config) -> Result<()> {
         .parse_filters(&cfg.log_level.clone())
         .init();
 
+    // First check if kubernetes options were provided.
+    let client = if let Some(c) = kc.check() {
+        runtime::kubernetes::default_kube_client()
+    };
+
+    let pod = if let Ok(p) =
+        runtime::kubernetes::get_pod(client.clone(), cfg.pod_name, cfg.pod_namespace)
+    {
+        p
+    } else {
+        return Err(anyhow!("❌ could not find provided pod"));
+    };
+
+    // copy data from the kubernetes pod out to the filesystem
+
     // Build the runtime
     let rt = if let Some(runtime) = runtime::set(&cfg.socket).await {
         runtime

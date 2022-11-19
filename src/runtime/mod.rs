@@ -2,6 +2,7 @@ mod docker;
 mod podman;
 
 pub mod container;
+pub mod kubernetes;
 
 use docker_api::Docker;
 
