@@ -98,10 +98,10 @@ and password (specified via the `-u` and `-p` flags).
 $ dcp quay.io/tyslaton/sample-catalog-private:latest -u <username> -p <password>
 ```
 
-> :warning: This serves as a convenient way to connect to private 
-registries but is insecure locally as your credentials are saved in
-your shell's history. If you would like to remain completely secure then
-login via `<container_runtime> login` and pull the image. dcp 
+> :warning: This serves as a convenient way to copy contents from a private image
+but is insecure as your registry credentials are saved in
+your shell history. If you would like to be completely secure then
+login via `<container_runtime> login` and pull the image first. dcp 
 will then be able to find the image locally and process it.
 
 ## FAQ
