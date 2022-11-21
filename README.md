@@ -91,14 +91,14 @@ Another example, for copying only the manifests directory:
 $ dcp quay.io/tflannag/bundles:resolveset-v0.0.2 -c manifests
 ```
 
-Lastly, we can reference a private registry by providing a username
+Lastly, we can copy from a private image by providing a username
 and password (specified via the `-u` and `-p` flags).
 
 ```
 $ dcp quay.io/tyslaton/sample-catalog-private:latest -u <username> -p <password>
 ```
 
-**Note**: This serves as a convenient way to connect to private 
+> :warning: This serves as a convenient way to connect to private 
 registries but is insecure locally as your credentials are saved in
 your shell's history. If you would like to remain completely secure then
 login via `<container_runtime> login` and pull the image. dcp 
