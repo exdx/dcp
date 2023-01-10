@@ -42,7 +42,7 @@ fn prints_version() -> TestResult {
 
     // version is defined and suceeds with the desired output
     Command::cargo_bin(PRG)?
-        .args(&["-V"])
+        .args(["-V"])
         .assert()
         .success()
         .stdout(predicate::str::contains(expected_version_output));
@@ -57,13 +57,13 @@ fn accepts_download_path() -> TestResult {
 
     // content_path is defined and succeeds
     Command::cargo_bin(PRG)?
-        .args(&["--download-path", path])
-        .args(&[DEFAULT_IMAGE])
+        .args(["--download-path", path])
+        .args([DEFAULT_IMAGE])
         .assert()
         .success();
 
     // verify that content was written to the desired download_path
-    assert_eq!(std::path::Path::new(path).exists(), true);
+    assert!(std::path::Path::new(path).exists());
 
     clean_up_test_dir(path);
 
@@ -78,14 +78,14 @@ fn accepts_content_path() -> TestResult {
 
     // content_path is defined and succeeds
     Command::cargo_bin(PRG)?
-        .args(&["--download-path", path])
-        .args(&["--content-path", content_path, DEFAULT_IMAGE])
+        .args(["--download-path", path])
+        .args(["--content-path", content_path, DEFAULT_IMAGE])
         .assert()
         .success();
 
     // verify that content_path grabbed the desired content
     let specific_content = &format!("{}/{}", path, content_path);
-    assert_eq!(std::path::Path::new(specific_content).exists(), true);
+    assert!(std::path::Path::new(specific_content).exists());
 
     clean_up_test_dir(path);
 
@@ -102,8 +102,8 @@ fn fails_invalid_content_path() -> TestResult {
     // there's no "manifests" directory in the
     // DEFAULT_IMAGE container image.
     Command::cargo_bin(PRG)?
-        .args(&["--download-path", path])
-        .args(&["--content-path", content_path, DEFAULT_IMAGE])
+        .args(["--download-path", path])
+        .args(["--content-path", content_path, DEFAULT_IMAGE])
         .assert()
         .failure();
 
@@ -119,14 +119,14 @@ fn accepts_image() -> TestResult {
 
     // image is defined and succeeds
     Command::cargo_bin(PRG)?
-        .args(&["--download-path", path])
-        .args(&[DEFAULT_IMAGE])
+        .args(["--download-path", path])
+        .args([DEFAULT_IMAGE])
         .assert()
         .success();
 
     // image is not defined and fails
     Command::cargo_bin(PRG)?
-        .args(&["--download-path", path])
+        .args(["--download-path", path])
         .assert()
         .failure();
 
@@ -142,8 +142,8 @@ fn defaults_tag_to_latest() -> TestResult {
 
     // image is defined and succeeds
     Command::cargo_bin(PRG)?
-        .args(&["--download-path", path])
-        .args(&[IMAGE_NO_TAG])
+        .args(["--download-path", path])
+        .args([IMAGE_NO_TAG])
         .assert()
         .success();
 
@@ -159,8 +159,8 @@ fn fails_on_just_tag() -> TestResult {
 
     // image is defined and succeeds
     Command::cargo_bin(PRG)?
-        .args(&["--download-path", path])
-        .args(&[":v0.0.4"])
+        .args(["--download-path", path])
+        .args([":v0.0.4"])
         .assert()
         .failure();
 
@@ -176,9 +176,9 @@ fn accepts_scratch_base_images() -> TestResult {
     let content_path: &str = "manifests";
 
     Command::cargo_bin(PRG)?
-        .args(&["--download-path", path])
-        .args(&["--content-path", content_path])
-        .args(&[SCRATCH_BASE_IMAGE])
+        .args(["--download-path", path])
+        .args(["--content-path", content_path])
+        .args([SCRATCH_BASE_IMAGE])
         .assert()
         .success();
 
