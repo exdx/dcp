@@ -22,5 +22,5 @@ async-trait = "0.1.61"
 
 [dev-dependencies]
 predicates = "2.1.5"
-assert_cmd = "2.0.4"
+assert_cmd = "2.0.5"
 rand = "0.8.5"
