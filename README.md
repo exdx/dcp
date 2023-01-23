@@ -11,7 +11,7 @@ allowing apps to run anywhere in a streamlined way. Some container images contai
 commands to start a long-lived binary, whereas others may simply contain data
 that needs to be available in the environment (for example, a Kubernetes cluster).
 For example, [operator-framework bundles](https://olm.operatorframework.io/docs/tasks/creating-operator-bundle/) and [crossplane packages](https://crossplane.io/docs/v1.9/concepts/packages.html) both use
-container images to store Kubernetes manifests. These manifests are unpacked on-cluster and applied to the cluster.
+container images to store Kubernetes manifests. These manifests are unpacked and applied to the cluster.
 
 One of the downsides of using container images to store data is that they are
 opaque. There's no way to quickly tell what's inside the image, although
