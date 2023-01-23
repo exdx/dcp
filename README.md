@@ -108,7 +108,7 @@ will then be able to find the image locally and process it.
 
 **Q**: I hit an unexpected error unpacking the root filesystem of an image: `trying to unpack outside of destination path`. How can I avoid this?
 
-**A**: dcp relies on the underlying `tar` Rust library to unpack the image filesystem represented as a tar file. The [unpack](https://docs.rs/tar/latest/tar/struct.Archive.html#method.unpack) method is sensitive in that it will not write files outside of the path specified by the destination. So things like symlinks will cause errors when unpacking. Whenever possible, use the `-c` flag to specify a directory to unpack, instead of the filesystem root, to avoid this error.
+**A**: dcp relies on the underlying `tar` Rust library to unpack the image filesystem represented as a tar file. The [unpack](https://docs.rs/tar/latest/tar/struct.Archive.html#method.unpack) method is sensitive in that it will not write files outside of the path specified by the destination. So things like symlinks will cause errors when unpacking. Whenever possible, use the `-c` flag to specify a directory to unpack, instead of the container filesystem root, to avoid this error.
 
 ------------------
 **Q**: I would like to use dcp to pull content from an image but I don't know where in the image the content is stored. Is there an `ls` command or similar functionality in dcp? 
