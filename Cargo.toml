@@ -16,7 +16,7 @@ tar = "0.4"
 log = "0.4"
 pretty_env_logger = "0.4"
 anyhow = "1.0"
-podman-api = "0.4"
+podman-api = "0.8"
 xdg = "^2.1"
 async-trait = "0.1.63"
 
