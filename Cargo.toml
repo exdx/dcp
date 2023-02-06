@@ -10,7 +10,7 @@ description = "A utility tool to copy container filesystems easily"
 [dependencies]
 clap = "2.33"
 docker-api = "0.9.1"
-tokio = { version = "1.24", features = ["full"] }
+tokio = { version = "1.25", features = ["full"] }
 futures-util = "0.3"
 tar = "0.4"
 log = "0.4"
