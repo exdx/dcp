@@ -21,6 +21,6 @@ xdg = "^2.1"
 async-trait = "0.1.66"
 
 [dev-dependencies]
-predicates = "2.1.5"
+predicates = "3.0.3"
 assert_cmd = "2.0.5"
 rand = "0.8.5"
