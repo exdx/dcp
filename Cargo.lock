@@ -158,14 +158,13 @@ dependencies = [
 
 [[package]]
 name = "containers-api"
-version = "0.2.0"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d2ca95f626f7be904f6ee24d0a525e7564c5c99544727229577f707dca42468"
+checksum = "ef94b0ff8338282b35bafb408eb0a3e53ba05bdb3b36840589ab9a67a6682593"
 dependencies = [
  "chrono",
  "flate2",
  "futures-util",
- "futures_codec",
  "http",
  "hyper",
  "hyperlocal",
@@ -790,9 +789,9 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "podman-api"
-version = "0.4.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "852a469c27bc8e6a403f1bd73288f241b3e813fe837b749ab87d03ef8f7ca147"
+checksum = "4d0ade207138f12695cb4be3b590283f1cf764c5c4909f39966c4b4b0dba7c1e"
 dependencies = [
  "base64",
  "byteorder",
@@ -815,9 +814,9 @@ dependencies = [
 
 [[package]]
 name = "podman-api-stubs"
-version = "0.5.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd2c5fdd235733e79a8570997ef664788a9f877899d0e7ae6e17acbd40b11413"
+checksum = "2d280c623f633a0dded88feab9e387f98451506431d5b7308a858c643305dcee"
 dependencies = [
  "chrono",
  "serde",
