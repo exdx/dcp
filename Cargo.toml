@@ -18,7 +18,7 @@ pretty_env_logger = "0.4"
 anyhow = "1.0"
 podman-api = "0.4"
 xdg = "^2.1"
-async-trait = "0.1.66"
+async-trait = "0.1.71"
 
 [dev-dependencies]
 predicates = "3.0.3"
